@@ -14,6 +14,16 @@ class DoctorListAPIView(generics.ListAPIView):
     serializer_class = DoctorSerializer
     permission_classes = [IsAuthenticated]
 
+class AdminDoctorListAPIView(
+    generics.ListAPIView
+):
+
+    queryset = DoctorProfile.objects.all()
+
+    serializer_class = DoctorSerializer
+
+    permission_classes = [IsAuthenticated]
+    
 class DoctorDetailAPIView(generics.RetrieveAPIView):
 
     queryset = DoctorProfile.objects.all()

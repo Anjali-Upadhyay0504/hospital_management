@@ -1,13 +1,10 @@
-from django.urls import path
 
-from .views import PrescriptionCreateAPIView
+
+
+
+from django.urls import path
+from .views import PrescriptionAPIView
 
 urlpatterns = [
-
-    path(
-        "create/",
-        PrescriptionCreateAPIView.as_view(),
-        name="prescription-create"
-    ),
-
+    path("", PrescriptionAPIView.as_view()),
 ]

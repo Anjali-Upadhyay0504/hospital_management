@@ -6,7 +6,7 @@ router = DefaultRouter()
 
 # Appointment endpoints
 router.register(
-    r"appointments",
+    r"",
     AppointmentViewSet,
     basename="appointments"
 )
