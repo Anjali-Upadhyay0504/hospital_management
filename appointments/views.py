@@ -14,7 +14,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated]
 
-    # 🔐 ROLE BASED DATA
+    # =========================
+    # 🔐 ROLE BASED DATA ACCESS
+    # =========================
     def get_queryset(self):
 
         user = self.request.user
@@ -27,7 +29,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
         return Appointment.objects.all()
 
-    # 🔐 CREATE APPOINTMENT
+    # =========================
+    # 🔥 CREATE APPOINTMENT
+    # =========================
     def perform_create(self, serializer):
 
         user = self.request.user
@@ -38,11 +42,11 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         doctor = serializer.validated_data["doctor"]
         appointment_date = serializer.validated_data["appointment_date"]
 
-        # schedule check
+        # check doctor schedule existence
         if not DoctorSchedule.objects.filter(doctor=doctor).exists():
-            raise ValidationError("Doctor not available")
+            raise ValidationError("Doctor is not available")
 
-        # duplicate check
+        # slot conflict check
         if Appointment.objects.filter(
             doctor=doctor,
             appointment_date=appointment_date
@@ -54,37 +58,74 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             status="pending"
         )
 
-    # 🔐 DOCTOR STATUS UPDATE (APPROVE / REJECT)
+    # =========================
+    # 🔥 DOCTOR ACTIONS
+    # =========================
     @action(detail=True, methods=["post"])
-    def update_status(self, request, pk=None):
+    def approve(self, request, pk=None):
 
         appointment = self.get_object()
         user = request.user
 
-        if user.role != "doctor":
+        if user.role != "doctor" or appointment.doctor != user:
             return Response(
-                {"error": "Only doctor can update status"},
+                {"error": "Not allowed"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        if appointment.doctor != user:
-            return Response(
-                {"error": "Not your appointment"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        new_status = request.data.get("status")
-
-        if new_status not in ["approved", "rejected"]:
-            return Response(
-                {"error": "Invalid status"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        appointment.status = new_status
+        appointment.status = "approved"
         appointment.save()
 
-        return Response({
-            "message": "Status updated",
-            "status": appointment.status
-        })
+        return Response({"message": "Appointment approved"})
+
+
+    @action(detail=True, methods=["post"])
+    def reject(self, request, pk=None):
+
+        appointment = self.get_object()
+        user = request.user
+
+        if user.role != "doctor" or appointment.doctor != user:
+            return Response(
+                {"error": "Not allowed"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        appointment.status = "rejected"
+        appointment.save()
+
+        return Response({"message": "Appointment rejected"})
+    @action(detail=True, methods=["post"])
+
+
+    def complete(self, request, pk=None):
+
+        appointment = self.get_object()
+        user = request.user
+
+        if user.role != "doctor" or appointment.doctor != user:
+            return Response({"error": "Not allowed"}, status=403)
+
+        if appointment.status != "approved":
+            return Response({"error": "Only approved can be completed"}, status=400)
+
+        appointment.status = "completed"
+        appointment.save()
+
+        return Response({"message": "Appointment completed"})
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+
+        appointment = self.get_object()
+        user = request.user
+
+        if user.role != "patient" or appointment.patient != user:
+            return Response({"error": "Not allowed"}, status=403)
+
+        if appointment.status in ["completed", "rejected"]:
+            return Response({"error": "Cannot cancel now"}, status=400)
+
+        appointment.status = "cancelled"
+        appointment.save()
+
+        return Response({"message": "Appointment cancelled"})

@@ -1,6 +1,8 @@
-from django.urls import path
-from .views import ScheduleListAPIView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import DoctorScheduleViewSet
 
-urlpatterns = [
-    path("list/", ScheduleListAPIView.as_view()),
-]
+router = DefaultRouter()
+router.register(r'', DoctorScheduleViewSet)
+
+urlpatterns = router.urls

@@ -16,7 +16,7 @@ async function loadDoctors() {
     try {
 
         const response = await fetch(
-            `${BASE_URL}/api/doctors/list/`,
+            `${BASE_URL}/api/doctor/admin/list/`,
             {
                 headers: {
                     Authorization:
@@ -27,7 +27,7 @@ async function loadDoctors() {
 
         allDoctors =
             await response.json();
-
+           console.log("Doctors:", allDoctors);
         renderDoctors(allDoctors);
 
     } catch(error) {

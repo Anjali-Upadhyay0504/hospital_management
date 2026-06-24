@@ -2,7 +2,7 @@ const BASE_URL = "http://127.0.0.1:8000";
 
 
 // ===============================
-// GET TOKEN
+// TOKEN
 // ===============================
 function getToken() {
     return localStorage.getItem("access_token");
@@ -10,9 +10,44 @@ function getToken() {
 
 
 // ===============================
-// LOAD APPOINTMENTS
+// HELPERS
+// ===============================
+function formatDate(dateString) {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleString();
+}
+
+function getStatusBadge(status) {
+
+    switch (status) {
+        case "approved":
+            return "bg-success";
+        case "rejected":
+            return "bg-danger";
+        case "pending":
+            return "bg-warning";
+        case "completed":
+            return "bg-primary";
+        case "cancelled":
+            return "bg-secondary";
+        default:
+            return "bg-dark";
+    }
+}
+
+
+// ===============================
+// APPOINTMENTS
 // ===============================
 async function loadAppointments() {
+
+    const table = document.getElementById("appointmentTable");
+
+    table.innerHTML = `
+        <tr>
+            <td colspan="6" class="text-center">Loading...</td>
+        </tr>
+    `;
 
     try {
 
@@ -32,23 +67,28 @@ async function loadAppointments() {
             ? data
             : data.results || [];
 
-        const table = document.getElementById("appointmentTable");
-        table.innerHTML = "";
+        if (appointments.length === 0) {
+            table.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center">No Appointments Found</td>
+                </tr>
+            `;
+            return;
+        }
+
+        let rows = "";
 
         appointments.forEach(item => {
 
-            table.innerHTML += `
+            rows += `
                 <tr>
                     <td>${item.id}</td>
-
                     <td>${item.patient_name || item.patient}</td>
-
                     <td>${formatDate(item.appointment_date)}</td>
-
                     <td>${item.reason || "-"}</td>
 
                     <td>
-                        <span class="badge bg-secondary">
+                        <span class="badge ${getStatusBadge(item.status)}">
                             ${item.status}
                         </span>
                     </td>
@@ -75,22 +115,32 @@ async function loadAppointments() {
             `;
         });
 
+        table.innerHTML = rows;
+
     } catch (error) {
+
         console.error(error);
-        alert("Unable to load appointments");
+
+        table.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-danger">
+                    Failed to load appointments
+                </td>
+            </tr>
+        `;
     }
 }
 
 
 // ===============================
-// UPDATE STATUS (APPROVE / REJECT)
+// UPDATE STATUS
 // ===============================
-async function updateStatus(appointmentId, statusValue) {
+async function updateStatus(id, statusValue) {
 
     try {
 
         const response = await fetch(
-            `${BASE_URL}/api/appointments/${appointmentId}/update_status/`,
+            `${BASE_URL}/api/appointments/${id}/update_status/`,
             {
                 method: "POST",
                 headers: {
@@ -106,66 +156,150 @@ async function updateStatus(appointmentId, statusValue) {
         const data = await response.json();
 
         if (!response.ok) {
-            alert(JSON.stringify(data));
+            alert(data.error || "Failed to update status");
             return;
         }
 
-        alert("Status Updated Successfully");
+        alert("Status updated successfully");
 
         loadAppointments();
 
     } catch (error) {
         console.error(error);
-        alert("Update Failed");
+        alert("Something went wrong");
     }
 }
 
 
 // ===============================
-// CREATE PRESCRIPTION
+// PRESCRIPTION
 // ===============================
 async function createPrescription(appointmentId) {
 
-    const diagnosis = prompt("Enter Diagnosis");
+    const diagnosis = prompt("Enter Diagnosis:");
     if (!diagnosis) return;
 
-    const medicines = prompt("Enter Medicines");
+    const medicines = prompt("Enter Medicines:");
+    if (!medicines) return;
 
-    const response = await fetch(
-        `${BASE_URL}/api/prescriptions/`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${getToken()}`
-            },
-            body: JSON.stringify({
-                appointment: appointmentId,
-                diagnosis: diagnosis,
-                medicines: medicines
-            })
+    try {
+
+        const response = await fetch(
+            `${BASE_URL}/api/prescriptions/`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${getToken()}`
+                },
+                body: JSON.stringify({
+                    appointment: appointmentId,
+                    diagnosis,
+                    medicines
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.error || "Failed to create prescription");
+            return;
         }
-    );
 
-    const data = await response.json();
+        alert("Prescription created successfully");
 
-    if (!response.ok) {
-        alert(JSON.stringify(data));
-        return;
+    } catch (error) {
+        console.error(error);
+        alert("Error creating prescription");
     }
-
-    alert("Prescription Created Successfully");
 }
 
 
 // ===============================
-// FORMAT DATE
+// SCHEDULE
 // ===============================
-function formatDate(dateString) {
+async function loadSchedules() {
 
-    if (!dateString) return "-";
+    const table = document.getElementById("scheduleTable");
 
-    return new Date(dateString).toLocaleString();
+    try {
+
+        const res = await fetch(`${BASE_URL}/api/schedule/`, {
+            headers: {
+                "Authorization": `Bearer ${getToken()}`
+            }
+        });
+
+        const data = await res.json();
+
+        console.log("SCHEDULE API RESPONSE:", data);
+
+        if (!res.ok) {
+            throw new Error(data.detail || "Failed to load schedules");
+        }
+
+        // 🔥 HANDLE BOTH CASES (array OR paginated)
+        const schedules = Array.isArray(data)
+            ? data
+            : data.results || [];
+
+        if (schedules.length === 0) {
+            table.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center">No Schedule Found</td>
+                </tr>
+            `;
+            return;
+        }
+
+        let rows = "";
+
+        schedules.forEach(item => {
+            rows += `
+                <tr>
+                    <td>${item.day}</td>
+                    <td>${item.start_time}</td>
+                    <td>${item.end_time}</td>
+                </tr>
+            `;
+        });
+
+        table.innerHTML = rows;
+
+    } catch (error) {
+
+        console.error(error);
+
+        table.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center text-danger">
+                    Failed to load schedules
+                </td>
+            </tr>
+        `;
+    }
+}
+
+
+// ===============================
+// TABS
+// ===============================
+function showTab(tabName) {
+
+    document.getElementById("appointmentsTab").style.display = "none";
+    document.getElementById("scheduleTab").style.display = "none";
+    document.getElementById("prescriptionTab").style.display = "none";
+
+    document.getElementById(tabName + "Tab").style.display = "block";
+
+    if (tabName === "schedule") {
+        loadSchedules();
+    }
+
+    if (tabName === "appointments") {
+        loadAppointments();
+    }
 }
 
 
@@ -182,7 +316,7 @@ function logout() {
 
 
 // ===============================
-// INITIAL LOAD
+// INIT
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
 

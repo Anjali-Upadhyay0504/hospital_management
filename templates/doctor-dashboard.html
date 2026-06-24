@@ -17,44 +17,84 @@
 
         <h2>Doctor Dashboard</h2>
 
-        <button
-            onclick="logout()"
-            class="btn btn-danger">
-
+        <button onclick="logout()" class="btn btn-danger">
             Logout
-
         </button>
 
     </div>
 
     <hr>
 
-    <h4>
-        My Appointments
-    </h4>
+    <!-- 🔥 TABS BUTTONS -->
+    <div class="btn-group mb-3">
 
-    <table class="table table-bordered">
+        <button class="btn btn-primary" onclick="showTab('appointments')">
+            Appointments
+        </button>
 
-        <thead>
+        <button class="btn btn-secondary" onclick="showTab('schedule')">
+            Schedule
+        </button>
 
-            <tr>
+        <button class="btn btn-info" onclick="showTab('prescription')">
+            Prescription
+        </button>
 
-                <th>ID</th>
-                <th>Patient</th>
-                <th>Date</th>
-                <th>Reason</th>
-                <th>Status</th>
-                <th>Actions</th>
+    </div>
 
-            </tr>
+    <!-- ================= APPOINTMENTS ================= -->
+    <div id="appointmentsTab">
 
-        </thead>
+        <h4>My Appointments</h4>
 
-        <tbody id="appointmentTable">
+        <table class="table table-bordered">
 
-        </tbody>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Date</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
 
-    </table>
+            <tbody id="appointmentTable"></tbody>
+
+        </table>
+
+    </div>
+
+    <!-- ================= SCHEDULE ================= -->
+    <div id="scheduleTab" style="display:none;">
+
+        <h4>My Schedule</h4>
+
+        <table class="table table-bordered">
+
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                </tr>
+            </thead>
+
+            <tbody id="scheduleTable"></tbody>
+
+        </table>
+
+    </div>
+
+    <!-- ================= PRESCRIPTION ================= -->
+    <div id="prescriptionTab" style="display:none;">
+
+        <h4>Prescription</h4>
+
+        <p>Prescription management will be here.</p>
+
+    </div>
 
 </div>
 

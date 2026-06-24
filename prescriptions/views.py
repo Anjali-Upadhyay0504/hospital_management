@@ -35,9 +35,13 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
         appointment = serializer.validated_data["appointment"]
 
         if appointment.doctor != self.request.user:
-            raise PermissionDenied("Not your appointment")
+            raise PermissionDenied(
+                "You are not assigned to this appointment."
+            )
 
         if appointment.status != "approved":
-            raise PermissionDenied("Only approved appointments allowed")
+            raise PermissionDenied(
+                "Prescription can only be created for approved appointments."
+            )
 
-        serializer.save(doctor=self.request.user)
+        serializer.save()

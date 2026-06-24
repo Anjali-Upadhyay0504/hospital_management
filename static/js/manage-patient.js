@@ -15,7 +15,7 @@ async function loadPatients() {
     try {
 
         const response = await fetch(
-            `${BASE_URL}/api/accounts/patients/`,
+            `${BASE_URL}/api/accounts/patient/`,
             {
                 headers: {
                     Authorization:
@@ -26,7 +26,7 @@ async function loadPatients() {
 
         allPatients =
             await response.json();
-
+            console.log("Patients:", allPatients);
         renderPatients(
             allPatients
         );
