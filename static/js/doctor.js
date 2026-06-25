@@ -7,7 +7,9 @@ const BASE_URL = "http://127.0.0.1:8000";
 function getToken() {
     return localStorage.getItem("access_token");
 }
-
+function getDoctorId() {
+    return localStorage.getItem("doctor_id");
+}
 
 // ===============================
 // HELPERS
@@ -219,89 +221,167 @@ async function createPrescription(appointmentId) {
 // ===============================
 // SCHEDULE
 // ===============================
-async function loadSchedules() {
+// ===============================
+// LOAD DOCTOR SCHEDULE
+// ===============================
 
-    const table = document.getElementById("scheduleTable");
+async function loadSchedules(){
 
-    try {
+    try{
 
-        const res = await fetch(`${BASE_URL}/api/schedule/`, {
-            headers: {
-                "Authorization": `Bearer ${getToken()}`
+        const response = await fetch(
+            `${BASE_URL}/api/schedule/`,
+            {
+                headers:{
+                    "Authorization":
+                    `Bearer ${getToken()}`
+                }
             }
-        });
+        );
 
-        const data = await res.json();
 
-        console.log("SCHEDULE API RESPONSE:", data);
+        const data = await response.json();
 
-        if (!res.ok) {
-            throw new Error(data.detail || "Failed to load schedules");
-        }
 
-        // 🔥 HANDLE BOTH CASES (array OR paginated)
         const schedules = Array.isArray(data)
             ? data
             : data.results || [];
 
-        if (schedules.length === 0) {
-            table.innerHTML = `
-                <tr>
-                    <td colspan="3" class="text-center">No Schedule Found</td>
-                </tr>
-            `;
-            return;
-        }
 
-        let rows = "";
+        const table =
+        document.getElementById("scheduleTable");
 
-        schedules.forEach(item => {
-            rows += `
-                <tr>
-                    <td>${item.day}</td>
-                    <td>${item.start_time}</td>
-                    <td>${item.end_time}</td>
-                </tr>
+
+        table.innerHTML="";
+
+
+        schedules.forEach(item=>{
+
+            table.innerHTML += `
+
+            <tr>
+
+                <td>${item.day}</td>
+
+                <td>${item.start_time}</td>
+
+                <td>${item.end_time}</td>
+
+            </tr>
+
             `;
+
         });
 
-        table.innerHTML = rows;
 
-    } catch (error) {
-
-        console.error(error);
-
-        table.innerHTML = `
-            <tr>
-                <td colspan="3" class="text-center text-danger">
-                    Failed to load schedules
-                </td>
-            </tr>
-        `;
     }
+    catch(error){
+
+        console.log(error);
+
+    }
+
 }
 
 
+
+
+// ===============================
+// ADD SCHEDULE
+// ===============================
+async function addSchedule() {
+
+    const day = document.getElementById("scheduleDay").value;
+    const start_time = document.getElementById("startTime").value;
+    const end_time = document.getElementById("endTime").value;
+
+    const doctorId = getDoctorId();
+
+    if (!doctorId) {
+        alert("Doctor ID missing in localStorage");
+        return;
+    }
+
+    const response = await fetch(`${BASE_URL}/api/schedule/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({
+            doctor: doctorId,
+            day,
+            start_time,
+            end_time
+        })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        alert("Schedule Added");
+        loadSchedules();
+    } else {
+        alert(JSON.stringify(data));
+    }
+}
 // ===============================
 // TABS
 // ===============================
-function showTab(tabName) {
+function showTab(tabName){
 
-    document.getElementById("appointmentsTab").style.display = "none";
-    document.getElementById("scheduleTab").style.display = "none";
-    document.getElementById("prescriptionTab").style.display = "none";
+    document.getElementById("appointmentsTab").style.display="none";
 
-    document.getElementById(tabName + "Tab").style.display = "block";
+    document.getElementById("scheduleTab").style.display="none";async function addSchedule() {
 
-    if (tabName === "schedule") {
-        loadSchedules();
+    const day = document.getElementById("scheduleDay").value;
+    const start_time = document.getElementById("startTime").value;
+    const end_time = document.getElementById("endTime").value;
+
+    const doctorId = getDoctorId();
+
+    if (!doctorId) {
+        alert("Doctor ID missing in localStorage");
+        return;
     }
 
-    if (tabName === "appointments") {
-        loadAppointments();
+    const response = await fetch(`${BASE_URL}/api/schedule/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({
+            doctor: doctorId,
+            day,
+            start_time,
+            end_time
+        })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        alert("Schedule Added");
+        loadSchedules();
+    } else {
+        alert(JSON.stringify(data));
     }
 }
 
+    document.getElementById("prescriptionTab").style.display="none";
+
+
+    document.getElementById(tabName+"Tab").style.display="block";
+
+
+    if(tabName==="schedule"){
+
+        loadSchedules();
+
+    }
+
+}
 
 // ===============================
 // LOGOUT
@@ -327,3 +407,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadAppointments();
 });
+

@@ -1,120 +1,117 @@
-const BASE_URL =
-    "http://127.0.0.1:8000";
+const BASE_URL = "http://127.0.0.1:8000";
 
-const token =
-    localStorage.getItem("access_token");
+function getToken() {
+    return localStorage.getItem("access_token");
+}
 
 let allDoctors = [];
 
-
 // =========================
-// Load Doctors
+// LOAD DOCTORS
 // =========================
-
 async function loadDoctors() {
 
     try {
 
-        const response = await fetch(
-            `${BASE_URL}/api/doctor/admin/list/`,
-            {
-                headers: {
-                    Authorization:
-                    `Bearer ${token}`
-                }
+        const token = localStorage.getItem("access_token");
+
+        const response = await fetch(`${BASE_URL}/api/doctor/`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
             }
-        );
+        });
 
-        allDoctors =
-            await response.json();
-           console.log("Doctors:", allDoctors);
-        renderDoctors(allDoctors);
+        if (!response.ok) {
+            const err = await response.json();
+            console.log("API ERROR:", err);
+            throw new Error("API error");
+        }
 
-    } catch(error) {
+        const data = await response.json();
+        console.log("Doctors:", data);
 
+        renderDoctors(data);
+
+    } catch (error) {
         console.error(error);
-
-        alert(
-            "Unable to load doctors"
-        );
+        alert("Unable to load doctors");
     }
 }
 
-
 // =========================
-// Render Doctors
+// RENDER DOCTORS
 // =========================
-
 function renderDoctors(doctors) {
 
-    const table =
-        document.getElementById(
-            "doctorTable"
-        );
+    const table = document.getElementById("doctorTable");
+
+    if (!table) return;
 
     table.innerHTML = "";
+
+    if (!doctors || doctors.length === 0) {
+        table.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center">
+                    No Doctors Found
+                </td>
+            </tr>
+        `;
+        return;
+    }
 
     doctors.forEach(doctor => {
 
         table.innerHTML += `
-        <tr>
+            <tr>
+                <td>${doctor.id || "-"}</td>
 
-            <td>${doctor.id}</td>
+                <td>${doctor.username || "-"}</td>
 
-            <td>
-                ${doctor.username}
-            </td>
+                <td>${doctor.specialization || "-"}</td>
 
-            <td>
-                ${doctor.specialization}
-            </td>
+                <td>${doctor.experience || 0}</td>
 
-            <td>
-                ${doctor.experience}
-            </td>
+                <td>₹${doctor.fee || 0}</td>
 
-            <td>
-                ₹${doctor.fee}
-            </td>
-
-            <td>
-                ${
-                    doctor.is_available
-                    ? "✅"
-                    : "❌"
-                }
-            </td>
-
-        </tr>
+                <td>
+                    ${doctor.is_available ? "✅" : "❌"}
+                </td>
+            </tr>
         `;
     });
 }
 
-
 // =========================
-// Search
+// SEARCH DOCTORS
 // =========================
+document.addEventListener("DOMContentLoaded", () => {
 
-document
-.getElementById("searchDoctor")
-.addEventListener(
-    "keyup",
-    function() {
+    const searchInput = document.getElementById("searchDoctor");
 
-        const keyword =
-            this.value.toLowerCase();
+    if (searchInput) {
+        searchInput.addEventListener("keyup", function () {
 
-        const filtered =
-            allDoctors.filter(
-                doctor =>
-                doctor.username
-                .toLowerCase()
-                .includes(keyword)
-            );
+            const keyword = this.value.toLowerCase();
 
-        renderDoctors(filtered);
+            const filtered = allDoctors.filter(doctor => {
+
+                return (
+                    (doctor.username || "")
+                        .toLowerCase()
+                        .includes(keyword) ||
+
+                    (doctor.specialization || "")
+                        .toLowerCase()
+                        .includes(keyword)
+                );
+            });
+
+            renderDoctors(filtered);
+        });
     }
-);
 
-
-loadDoctors();
+    loadDoctors();
+});

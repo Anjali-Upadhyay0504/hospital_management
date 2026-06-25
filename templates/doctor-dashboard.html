@@ -66,26 +66,94 @@
 
     </div>
 
-    <!-- ================= SCHEDULE ================= -->
-    <div id="scheduleTab" style="display:none;">
+   <!-- ================= SCHEDULE ================= -->
+<div id="scheduleTab" style="display:none;">
 
-        <h4>My Schedule</h4>
+    <h4>My Schedule</h4>
 
-        <table class="table table-bordered">
+    <!-- ADD SCHEDULE FORM -->
+    <div class="card p-3 mb-3">
 
-            <thead>
-                <tr>
-                    <th>Day</th>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                </tr>
-            </thead>
+        <h5>Add Schedule</h5>
 
-            <tbody id="scheduleTable"></tbody>
+        <div class="row">
 
-        </table>
+            <!-- DAY DROPDOWN (IMPORTANT FIX) -->
+            <div class="col-md-3">
+
+                <select id="scheduleDay" class="form-control">
+
+                    <option value="">Select Day</option>
+
+                    <option value="mon">Monday</option>
+                    <option value="tue">Tuesday</option>
+                    <option value="wed">Wednesday</option>
+                    <option value="thu">Thursday</option>
+                    <option value="fri">Friday</option>
+                    <option value="sat">Saturday</option>
+                    <option value="sun">Sunday</option>
+
+                </select>
+
+            </div>
+
+            <!-- START TIME -->
+            <div class="col-md-3">
+
+                <input 
+                    type="time"
+                    id="startTime"
+                    class="form-control"
+                >
+
+            </div>
+
+            <!-- END TIME -->
+            <div class="col-md-3">
+
+                <input 
+                    type="time"
+                    id="endTime"
+                    class="form-control"
+                >
+
+            </div>
+
+            <!-- BUTTON -->
+            <div class="col-md-3">
+
+                <button 
+                    class="btn btn-success w-100"
+                    onclick="addSchedule()">
+
+                    Add Schedule
+
+                </button>
+
+            </div>
+
+        </div>
 
     </div>
+
+    <!-- SCHEDULE TABLE -->
+    <table class="table table-bordered">
+
+        <thead class="table-dark">
+
+            <tr>
+                <th>Day</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="scheduleTable"></tbody>
+
+    </table>
+
+</div>
 
     <!-- ================= PRESCRIPTION ================= -->
     <div id="prescriptionTab" style="display:none;">

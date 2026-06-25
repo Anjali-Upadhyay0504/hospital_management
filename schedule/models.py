@@ -1,5 +1,5 @@
 from django.db import models
-from django.conf import settings
+from django.core.exceptions import ValidationError
 
 
 class DoctorSchedule(models.Model):
@@ -15,9 +15,8 @@ class DoctorSchedule(models.Model):
     )
 
     doctor = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        "doctor.DoctorProfile",
         on_delete=models.CASCADE,
-        limit_choices_to={"role": "doctor"},
         related_name="schedules"
     )
 
@@ -33,9 +32,9 @@ class DoctorSchedule(models.Model):
         ordering = ["day", "start_time"]
 
     def __str__(self):
-        return f"{self.doctor.username} - {self.day}"
+        return f"{self.doctor.user.username} - {self.day}"
 
     # 🔥 VALIDATION
     def clean(self):
         if self.start_time >= self.end_time:
-            raise ValueError("Start time must be before end time")
+            raise ValidationError("Start time must be before end time")

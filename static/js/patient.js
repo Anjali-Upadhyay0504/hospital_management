@@ -24,7 +24,7 @@ async function loadDoctors() {
     try {
 
         const response = await fetch(
-            `${BASE_URL}/api/doctor/list/`,
+            `${BASE_URL}/api/doctor/`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`

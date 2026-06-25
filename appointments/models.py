@@ -19,9 +19,9 @@ class Appointment(models.Model):
     )
 
     doctor = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        "doctor.DoctorProfile",
         on_delete=models.CASCADE,
-        related_name="doctor_appointments"
+        related_name="appointments"
     )
 
     appointment_date = models.DateTimeField()
