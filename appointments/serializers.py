@@ -47,9 +47,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
         appointment_time = appointment_datetime.time()
 
-        # =========================
-        # 1. Duplicate booking check
-        # =========================
+        # 🔥 ADD DAY CHECK (IMPORTANT)
+        day = appointment_datetime.strftime("%a").lower()
+
+        # Duplicate check
         if Appointment.objects.filter(
             doctor=doctor,
             appointment_date=appointment_datetime,
@@ -59,18 +60,19 @@ class AppointmentSerializer(serializers.ModelSerializer):
                 "Doctor already has an appointment at this time"
             )
 
-        # =========================
-        # 2. Schedule validation
-        # =========================
-        schedules = DoctorSchedule.objects.filter(doctor=doctor)
+        # Schedule check (FIXED)
+        schedules = DoctorSchedule.objects.filter(
+            doctor=doctor,
+            day=day
+        )
 
         if not schedules.exists():
-            raise serializers.ValidationError("Doctor has no schedule")
+            raise serializers.ValidationError("Doctor has no schedule for this day")
 
         allowed = False
 
         for schedule in schedules:
-            if schedule.start_time <= appointment_time <= schedule.end_time:
+            if schedule.start_time <= appointment_time < schedule.end_time:
                 allowed = True
                 break
 

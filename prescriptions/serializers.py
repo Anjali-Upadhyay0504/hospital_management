@@ -5,12 +5,12 @@ from .models import Prescription
 class PrescriptionSerializer(serializers.ModelSerializer):
 
     patient_name = serializers.CharField(
-        source="appointment.patient.username",
+        source="appointment.patient.user.username",
         read_only=True
     )
 
     doctor_name = serializers.CharField(
-        source="appointment.doctor.username",
+        source="appointment.doctor.user.username",
         read_only=True
     )
 

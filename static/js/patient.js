@@ -46,7 +46,7 @@ async function loadDoctors() {
 
             select.innerHTML += `
                 <option value="${doctor.id}">
-                    Dr. ${doctor.username} (${doctor.specialization || "N/A"})
+                    Dr. ${doctor.username} - ${doctor.specialization} - ₹${doctor.fee}
                 </option>
             `;
         });
@@ -197,7 +197,58 @@ async function loadPrescriptions() {
     }
 }
 
+// ==========================
+// Become Doctor
+// ==========================
+async function requestDoctor() {
 
+    const specialization = document.getElementById("specialization").value;
+    const experience = document.getElementById("experience").value;
+    const qualification = document.getElementById("qualification").value;
+    const fee = document.getElementById("fee").value;
+
+    if (!specialization || !experience || !qualification) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `${BASE_URL}/api/doctor/request_doctor/`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    specialization,
+                    experience,
+                    qualification,
+                    fee
+                })
+            }
+        );
+
+        const data = await safeJson(response);
+        console.log("Status:", response.status);
+        console.log("Response:", data);
+        if (!response.ok) {
+            alert(data.error || JSON.stringify(data));
+            return;
+        }
+
+        document.getElementById("doctorRequestMessage").innerHTML =
+            `<div class="alert alert-success">
+                Doctor request submitted successfully.
+            </div>`;
+
+    } catch (error) {
+        console.error(error);
+        alert("Unable to submit request");
+    }
+}
 // ==========================
 // Logout
 // ==========================

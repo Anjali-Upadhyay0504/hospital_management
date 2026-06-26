@@ -17,7 +17,9 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
         user = self.request.user
 
         if user.role == "doctor":
-            return Prescription.objects.filter(doctor=user)
+            return Prescription.objects.filter(
+                appointment__doctor__user=user
+            )
 
         if user.role == "patient":
             return Prescription.objects.filter(
@@ -34,14 +36,24 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
 
         appointment = serializer.validated_data["appointment"]
 
-        if appointment.doctor != self.request.user:
-            raise PermissionDenied(
-                "You are not assigned to this appointment."
-            )
+        # FIXED DOCTOR CHECK
+        if appointment.doctor.user != self.request.user:
+            raise PermissionDenied("You are not assigned to this appointment.")
 
+        # STATUS CHECK
         if appointment.status != "approved":
-            raise PermissionDenied(
-                "Prescription can only be created for approved appointments."
-            )
+            raise PermissionDenied("Prescription can only be created for approved appointments.")
 
-        serializer.save()
+        prescription = serializer.save()
+
+       
+
+    # 🔥 IMPORTANT FIX (force DB update)
+        from appointment.models import Appointment  # adjust app name
+
+        Appointment.objects.filter(id=appointment.id).update(status="completed")
+
+        return prescription
+
+
+

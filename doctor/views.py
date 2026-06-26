@@ -4,8 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 
-from .models import DoctorProfile
-from .serializers import DoctorSerializer
+from .models import DoctorProfile, DoctorRequest
+from .serializers import DoctorSerializer, DoctorRequestSerializer
 
 
 class DoctorViewSet(viewsets.ModelViewSet):
@@ -74,3 +74,123 @@ class DoctorViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(profile)
 
         return Response(serializer.data)
+    
+     # =========================
+    # 🔥 REQUEST DOCTOR
+    # =========================
+
+    @action(detail=False, methods=["post"])
+    def request_doctor(self, request):
+
+        # Sirf patient request bhej sakta hai
+        if request.user.role != "patient":
+            return Response(
+                {"error": "Only patients can send doctor request"},
+                status=403
+            )
+
+        # Ek hi request allow hogi
+        if DoctorRequest.objects.filter(user=request.user).exists():
+            return Response(
+                {"error": "Doctor request already submitted"},
+                status=400
+            )
+
+        serializer = DoctorRequestSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=201)
+      # =========================
+    # 🔥 REQUEST PENDING
+    # =========================
+
+    @action(detail=False, methods=["get"])
+
+
+    def pending_requests(self, request):
+
+        if request.user.role != "admin":
+            return Response(
+                {"error": "Only admin can view pending requests"},
+                status=403
+            )
+
+        requests = DoctorRequest.objects.filter(status="pending")
+
+        serializer = DoctorRequestSerializer(requests, many=True)
+
+        return Response(serializer.data)
+    
+     # =========================
+    # 🔥REQUEST APPROVE
+    # =========================
+    
+    @action(detail=True, methods=["post"])
+    def approve_request(self, request, pk=None):
+
+        if request.user.role != "admin":
+            return Response(
+                {"error": "Only admin can approve requests"},
+                status=403
+            )
+
+        try:
+            doctor_request = DoctorRequest.objects.get(pk=pk)
+        except DoctorRequest.DoesNotExist:
+            return Response(
+                {"error": "Request not found"},
+                status=404
+            )
+
+        # Already approved?
+        if doctor_request.status == "approved":
+            return Response(
+                {"error": "Request already approved"},
+                status=400
+            )
+
+        doctor_request.status = "approved"
+        doctor_request.save()
+
+        user = doctor_request.user
+        user.role = "doctor"
+        user.save()
+
+        DoctorProfile.objects.create(
+            user=user,
+            specialization=doctor_request.specialization,
+            experience=doctor_request.experience,
+            fee=doctor_request.fee
+        )
+
+        return Response({
+            "message": "Doctor approved successfully"
+        })
+   # =========================
+    # 🔥 REQUEST REJECT
+    # =========================
+
+    
+    @action(detail=True, methods=["post"])
+    def reject_request(self, request, pk=None):
+
+        if request.user.role != "admin":
+            return Response({"error": "Only admin can reject"}, status=403)
+
+        try:
+            doctor_request = DoctorRequest.objects.get(pk=pk)
+        except DoctorRequest.DoesNotExist:
+            return Response({"error": "Request not found"}, status=404)
+
+        if doctor_request.status != "pending":
+            return Response({"error": "Request already processed"}, status=400)
+
+        doctor_request.status = "rejected"
+        doctor_request.save()
+
+        return Response({"message": "Doctor request rejected successfully"})

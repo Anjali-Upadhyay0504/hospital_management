@@ -31,25 +31,24 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         return Appointment.objects.all()
 
     def perform_create(self, serializer):
-
         user = self.request.user
 
         if user.role != "patient":
             raise PermissionDenied("Only patients can book appointment")
 
-        doctor = serializer.validated_data["doctor"]
-        appointment_date = serializer.validated_data["appointment_date"]
-
-        if not DoctorSchedule.objects.filter(doctor=doctor).exists():
-            raise ValidationError("Doctor is not available")
-
-        if Appointment.objects.filter(
-            doctor=doctor,
-            appointment_date=appointment_date
-        ).exists():
-            raise ValidationError("Slot already booked")
-
         serializer.save(
             patient=user,
             status="pending"
         )
+
+    @action(detail=True, methods=["post"])
+    def update_status(self, request, pk=None):
+        appointment = self.get_object()
+
+        appointment.status = request.data.get("status")
+        appointment.save()
+
+        return Response({
+            "message": "Status updated",
+            "status": appointment.status
+        })

@@ -7,9 +7,7 @@ const BASE_URL = "http://127.0.0.1:8000";
 function getToken() {
     return localStorage.getItem("access_token");
 }
-function getDoctorId() {
-    return localStorage.getItem("doctor_id");
-}
+
 
 // ===============================
 // HELPERS
@@ -20,20 +18,13 @@ function formatDate(dateString) {
 }
 
 function getStatusBadge(status) {
-
     switch (status) {
-        case "approved":
-            return "bg-success";
-        case "rejected":
-            return "bg-danger";
-        case "pending":
-            return "bg-warning";
-        case "completed":
-            return "bg-primary";
-        case "cancelled":
-            return "bg-secondary";
-        default:
-            return "bg-dark";
+        case "approved": return "bg-success";
+        case "rejected": return "bg-danger";
+        case "pending": return "bg-warning";
+        case "completed": return "bg-primary";
+        case "cancelled": return "bg-secondary";
+        default: return "bg-dark";
     }
 }
 
@@ -45,36 +36,21 @@ async function loadAppointments() {
 
     const table = document.getElementById("appointmentTable");
 
-    table.innerHTML = `
-        <tr>
-            <td colspan="6" class="text-center">Loading...</td>
-        </tr>
-    `;
+    table.innerHTML = `<tr><td colspan="6" class="text-center">Loading...</td></tr>`;
 
     try {
 
-        const response = await fetch(`${BASE_URL}/api/appointments/`, {
+        const res = await fetch(`${BASE_URL}/api/appointments/`, {
             headers: {
                 "Authorization": `Bearer ${getToken()}`
             }
         });
 
-        const data = await response.json();
+        const data = await res.json();
+        const appointments = data.results || data || [];
 
-        if (!response.ok) {
-            throw new Error("Failed to load appointments");
-        }
-
-        const appointments = Array.isArray(data)
-            ? data
-            : data.results || [];
-
-        if (appointments.length === 0) {
-            table.innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center">No Appointments Found</td>
-                </tr>
-            `;
+        if (!appointments.length) {
+            table.innerHTML = `<tr><td colspan="6" class="text-center">No Appointments Found</td></tr>`;
             return;
         }
 
@@ -82,54 +58,44 @@ async function loadAppointments() {
 
         appointments.forEach(item => {
 
+            let actions = "";
+
+            if (item.status === "pending") {
+                actions = `
+                    <button class="btn btn-success btn-sm" onclick="updateStatus(${item.id}, 'approved')">Approve</button>
+                    <button class="btn btn-danger btn-sm" onclick="updateStatus(${item.id}, 'rejected')">Reject</button>
+                `;
+            }
+
+            if (item.status === "approved") {
+                actions = `
+                    <button class="btn btn-primary btn-sm" onclick="createPrescription(${item.id})">
+                        Prescription
+                    </button>
+                `;
+            }
+
             rows += `
                 <tr>
                     <td>${item.id}</td>
                     <td>${item.patient_name || item.patient}</td>
                     <td>${formatDate(item.appointment_date)}</td>
                     <td>${item.reason || "-"}</td>
-
                     <td>
                         <span class="badge ${getStatusBadge(item.status)}">
                             ${item.status}
                         </span>
                     </td>
-
-                    <td>
-
-                        <button class="btn btn-success btn-sm"
-                            onclick="updateStatus(${item.id}, 'approved')">
-                            Approve
-                        </button>
-
-                        <button class="btn btn-danger btn-sm"
-                            onclick="updateStatus(${item.id}, 'rejected')">
-                            Reject
-                        </button>
-
-                        <button class="btn btn-primary btn-sm"
-                            onclick="createPrescription(${item.id})">
-                            Prescription
-                        </button>
-
-                    </td>
+                    <td>${actions}</td>
                 </tr>
             `;
         });
 
         table.innerHTML = rows;
 
-    } catch (error) {
-
-        console.error(error);
-
-        table.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center text-danger">
-                    Failed to load appointments
-                </td>
-            </tr>
-        `;
+    } catch (err) {
+        console.error(err);
+        table.innerHTML = `<tr><td colspan="6" class="text-danger text-center">Error loading appointments</td></tr>`;
     }
 }
 
@@ -141,34 +107,28 @@ async function updateStatus(id, statusValue) {
 
     try {
 
-        const response = await fetch(
-            `${BASE_URL}/api/appointments/${id}/update_status/`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${getToken()}`
-                },
-                body: JSON.stringify({
-                    status: statusValue
-                })
-            }
-        );
+        const res = await fetch(`${BASE_URL}/api/appointments/${id}/update_status/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({ status: statusValue })
+        });
 
-        const data = await response.json();
+        const data = await res.json();
 
-        if (!response.ok) {
-            alert(data.error || "Failed to update status");
+        if (!res.ok) {
+            alert(data.detail || data.error || "Failed");
             return;
         }
 
-        alert("Status updated successfully");
-
+        alert("Status updated");
         loadAppointments();
 
-    } catch (error) {
-        console.error(error);
-        alert("Something went wrong");
+    } catch (err) {
+        console.error(err);
+        alert("Error updating status");
     }
 }
 
@@ -177,43 +137,89 @@ async function updateStatus(id, statusValue) {
 // PRESCRIPTION
 // ===============================
 async function createPrescription(appointmentId) {
+    console.log(typeof appointmentId, appointmentId);
+
 
     const diagnosis = prompt("Enter Diagnosis:");
-    if (!diagnosis) return;
-
     const medicines = prompt("Enter Medicines:");
-    if (!medicines) return;
+
+    if (!diagnosis || !medicines) {
+        alert("Fields required");
+        return;
+    }
 
     try {
 
-        const response = await fetch(
-            `${BASE_URL}/api/prescriptions/`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${getToken()}`
-                },
-                body: JSON.stringify({
-                    appointment: appointmentId,
-                    diagnosis,
-                    medicines
-                })
-            }
-        );
+        const response = await fetch(`${BASE_URL}/api/prescriptions/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({
+                appointment: Number(appointmentId),
+                diagnosis: diagnosis.trim(),
+                medicines: medicines.trim()
+            })
+            
+        });
 
         const data = await response.json();
 
+        console.log("STATUS:", response.status);
+        console.log("RESPONSE:", data);
+
         if (!response.ok) {
-            alert(data.error || "Failed to create prescription");
+            alert(JSON.stringify(data));
             return;
         }
 
         alert("Prescription created successfully");
 
+        loadAppointments();
+        loadPrescriptions();
+
     } catch (error) {
         console.error(error);
-        alert("Error creating prescription");
+        alert("Network error");
+    }
+}
+
+// ===============================
+// PRESCRIPTIONS LIST
+// ===============================
+async function loadPrescriptions() {
+
+    try {
+
+        const res = await fetch(`${BASE_URL}/api/prescriptions/`, {
+            headers: {
+                "Authorization": `Bearer ${getToken()}`
+            }
+        });
+
+        const data = await res.json();
+        const prescriptions = data.results || data || [];
+
+        const table = document.getElementById("prescriptionTable");
+        table.innerHTML = "";
+
+        prescriptions.forEach(p => {
+
+            table.innerHTML += `
+                <tr>
+                    <td>${p.id}</td>
+                    <td>${p.patient_name}</td>
+                    <td>${p.doctor_name}</td>
+                    <td>${p.diagnosis}</td>
+                    <td>${p.medicines}</td>
+                    <td>${formatDate(p.created_at)}</td>
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error(err);
     }
 }
 
@@ -221,69 +227,37 @@ async function createPrescription(appointmentId) {
 // ===============================
 // SCHEDULE
 // ===============================
-// ===============================
-// LOAD DOCTOR SCHEDULE
-// ===============================
+async function loadSchedules() {
 
-async function loadSchedules(){
+    try {
 
-    try{
-
-        const response = await fetch(
-            `${BASE_URL}/api/schedule/`,
-            {
-                headers:{
-                    "Authorization":
-                    `Bearer ${getToken()}`
-                }
+        const res = await fetch(`${BASE_URL}/api/schedule/`, {
+            headers: {
+                "Authorization": `Bearer ${getToken()}`
             }
-        );
-
-
-        const data = await response.json();
-
-
-        const schedules = Array.isArray(data)
-            ? data
-            : data.results || [];
-
-
-        const table =
-        document.getElementById("scheduleTable");
-
-
-        table.innerHTML="";
-
-
-        schedules.forEach(item=>{
-
-            table.innerHTML += `
-
-            <tr>
-
-                <td>${item.day}</td>
-
-                <td>${item.start_time}</td>
-
-                <td>${item.end_time}</td>
-
-            </tr>
-
-            `;
-
         });
 
+        const data = await res.json();
+        const schedules = data.results || data || [];
 
+        const table = document.getElementById("scheduleTable");
+        table.innerHTML = "";
+
+        schedules.forEach(s => {
+
+            table.innerHTML += `
+                <tr>
+                    <td>${s.day}</td>
+                    <td>${s.start_time}</td>
+                    <td>${s.end_time}</td>
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error(err);
     }
-    catch(error){
-
-        console.log(error);
-
-    }
-
 }
-
-
 
 
 // ===============================
@@ -295,102 +269,59 @@ async function addSchedule() {
     const start_time = document.getElementById("startTime").value;
     const end_time = document.getElementById("endTime").value;
 
-    const doctorId = getDoctorId();
+    try {
 
-    if (!doctorId) {
-        alert("Doctor ID missing in localStorage");
-        return;
-    }
+        const res = await fetch(`${BASE_URL}/api/schedule/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${getToken()}`
+            },
+            body: JSON.stringify({
+                day,
+                start_time,
+                end_time
+            })
+        });
 
-    const response = await fetch(`${BASE_URL}/api/schedule/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({
-            doctor: doctorId,
-            day,
-            start_time,
-            end_time
-        })
-    });
+        const data = await res.json();
 
-    const data = await response.json();
+        if (!res.ok) {
+            alert(JSON.stringify(data));
+            return;
+        }
 
-    if (response.ok) {
         alert("Schedule Added");
         loadSchedules();
-    } else {
-        alert(JSON.stringify(data));
+
+    } catch (err) {
+        console.error(err);
     }
 }
+
+
 // ===============================
 // TABS
 // ===============================
-function showTab(tabName){
+function showTab(tabName) {
 
-    document.getElementById("appointmentsTab").style.display="none";
+    document.getElementById("appointmentsTab").style.display = "none";
+    document.getElementById("scheduleTab").style.display = "none";
+    document.getElementById("prescriptionTab").style.display = "none";
 
-    document.getElementById("scheduleTab").style.display="none";async function addSchedule() {
+    document.getElementById(tabName + "Tab").style.display = "block";
 
-    const day = document.getElementById("scheduleDay").value;
-    const start_time = document.getElementById("startTime").value;
-    const end_time = document.getElementById("endTime").value;
-
-    const doctorId = getDoctorId();
-
-    if (!doctorId) {
-        alert("Doctor ID missing in localStorage");
-        return;
-    }
-
-    const response = await fetch(`${BASE_URL}/api/schedule/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({
-            doctor: doctorId,
-            day,
-            start_time,
-            end_time
-        })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-        alert("Schedule Added");
-        loadSchedules();
-    } else {
-        alert(JSON.stringify(data));
-    }
+    if (tabName === "appointments") loadAppointments();
+    if (tabName === "schedule") loadSchedules();
+    if (tabName === "prescription") loadPrescriptions();
 }
 
-    document.getElementById("prescriptionTab").style.display="none";
-
-
-    document.getElementById(tabName+"Tab").style.display="block";
-
-
-    if(tabName==="schedule"){
-
-        loadSchedules();
-
-    }
-
-}
 
 // ===============================
 // LOGOUT
 // ===============================
 function logout() {
-
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-
+    localStorage.clear();
     window.location.href = "/login/";
 }
 
@@ -406,5 +337,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     loadAppointments();
+    loadSchedules();
+    loadPrescriptions();
 });
 
+
+// expose
+window.addSchedule = addSchedule;
+window.loadSchedules = loadSchedules;
+window.showTab = showTab;
+window.updateStatus = updateStatus;
+window.createPrescription = createPrescription;
