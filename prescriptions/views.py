@@ -1,9 +1,17 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
-
+# from rest_framework.exceptions import PermissionDenied
+# from appointments.models import Appointment
 from .models import Prescription
 from .serializers import PrescriptionSerializer
+from django.db import transaction
+from appointments.models import Appointment
+from rest_framework.exceptions import PermissionDenied
+ 
+
+from io import BytesIO
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
 
 
 class PrescriptionAPIView(generics.ListCreateAPIView):
@@ -18,12 +26,12 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
 
         if user.role == "doctor":
             return Prescription.objects.filter(
-                appointment__doctor__user=user
+                appointment__doctor__user_id=user.id
             )
 
         if user.role == "patient":
             return Prescription.objects.filter(
-                appointment__patient=user
+                appointment__patient_id=user.id
             )
 
         if user.role == "admin":
@@ -31,29 +39,65 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
 
         return Prescription.objects.none()
 
+            
+
     # CREATE (POST)
+
+
+
+
+
+# from django.db import transaction
+# from appointments.models import Appointment
+# from rest_framework.exceptions import PermissionDenied
+
+# from django.db import transaction
+# from appointments.models import Appointment
+# from rest_framework.exceptions import PermissionDenied
+
+
     def perform_create(self, serializer):
 
         appointment = serializer.validated_data["appointment"]
 
-        # FIXED DOCTOR CHECK
         if appointment.doctor.user != self.request.user:
-            raise PermissionDenied("You are not assigned to this appointment.")
+            raise PermissionDenied()
 
-        # STATUS CHECK
         if appointment.status != "approved":
-            raise PermissionDenied("Prescription can only be created for approved appointments.")
+            raise PermissionDenied()
 
-        prescription = serializer.save()
+        with transaction.atomic():
 
-       
+            prescription = serializer.save()
 
-    # 🔥 IMPORTANT FIX (force DB update)
-        from appointment.models import Appointment  # adjust app name
+            rows = Appointment.objects.filter(id=appointment.id).update(
+                status="completed"
+            )
 
-        Appointment.objects.filter(id=appointment.id).update(status="completed")
+            print("UPDATED ROWS:", rows)
 
         return prescription
+    
+class PrescriptionDetailAPIView(generics.RetrieveAPIView):
 
+    serializer_class = PrescriptionSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
 
+        user = self.request.user
+
+        if user.role == "doctor":
+            return Prescription.objects.filter(
+                appointment__doctor__user_id=user.id
+            )
+
+        if user.role == "patient":
+            return Prescription.objects.filter(
+                appointment__patient_id=user.id
+            )
+
+        if user.role == "admin":
+            return Prescription.objects.all()
+
+        return Prescription.objects.none()

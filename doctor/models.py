@@ -20,10 +20,12 @@ class DoctorProfile(models.Model):
 
 class DoctorRequest(models.Model):
 
+  
     STATUS_CHOICES = (
-        ("pending", "Pending"),
-        ("approved", "Approved"),
-        ("rejected", "Rejected"),
+    ("pending", "Pending"),
+    ("approved", "Approved"),
+    ("rejected", "Rejected"),
+    ("completed", "Completed"),
     )
 
     user = models.OneToOneField(

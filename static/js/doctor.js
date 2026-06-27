@@ -29,22 +29,24 @@ function getStatusBadge(status) {
 }
 
 
-// ===============================
-// APPOINTMENTS
-// ===============================
-async function loadAppointments() {
+// ================
+// appointmnet
+// ===============
+async function loadAppointments(view = "today") {
 
     const table = document.getElementById("appointmentTable");
-
     table.innerHTML = `<tr><td colspan="6" class="text-center">Loading...</td></tr>`;
 
     try {
 
-        const res = await fetch(`${BASE_URL}/api/appointments/`, {
-            headers: {
-                "Authorization": `Bearer ${getToken()}`
+        const res = await fetch(
+            `${BASE_URL}/api/appointments/?view=${view}`,
+            {
+                headers: {
+                    "Authorization": `Bearer ${getToken()}`
+                }
             }
-        });
+        );
 
         const data = await res.json();
         const appointments = data.results || data || [];
@@ -62,25 +64,37 @@ async function loadAppointments() {
 
             if (item.status === "pending") {
                 actions = `
-                    <button class="btn btn-success btn-sm" onclick="updateStatus(${item.id}, 'approved')">Approve</button>
-                    <button class="btn btn-danger btn-sm" onclick="updateStatus(${item.id}, 'rejected')">Reject</button>
+                    <button class="btn btn-success btn-sm"
+                        onclick="updateStatus(${item.id}, 'approved')">
+                        Approve
+                    </button>
+
+                    <button class="btn btn-danger btn-sm"
+                        onclick="updateStatus(${item.id}, 'rejected')">
+                        Reject
+                    </button>
                 `;
             }
 
-            if (item.status === "approved") {
+            else if (item.status === "approved") {
                 actions = `
-                    <button class="btn btn-primary btn-sm" onclick="createPrescription(${item.id})">
+                    <button class="btn btn-primary btn-sm"
+                        onclick="openPrescriptionTab(${item.id})">
                         Prescription
                     </button>
                 `;
             }
 
+            else if (item.status === "completed") {
+                actions = `<span class="badge bg-success">Completed</span>`;
+            }
+
             rows += `
                 <tr>
                     <td>${item.id}</td>
-                    <td>${item.patient_name || item.patient}</td>
+                    <td>${item.patient_name ?? "-"}</td>
                     <td>${formatDate(item.appointment_date)}</td>
-                    <td>${item.reason || "-"}</td>
+                    <td>${item.reason ?? "-"}</td>
                     <td>
                         <span class="badge ${getStatusBadge(item.status)}">
                             ${item.status}
@@ -95,7 +109,7 @@ async function loadAppointments() {
 
     } catch (err) {
         console.error(err);
-        table.innerHTML = `<tr><td colspan="6" class="text-danger text-center">Error loading appointments</td></tr>`;
+        table.innerHTML = `<tr><td class="text-danger text-center">Error loading appointments</td></tr>`;
     }
 }
 
@@ -124,7 +138,7 @@ async function updateStatus(id, statusValue) {
         }
 
         alert("Status updated");
-        loadAppointments();
+        await loadAppointments();
 
     } catch (err) {
         console.error(err);
@@ -133,18 +147,63 @@ async function updateStatus(id, statusValue) {
 }
 
 
+
 // ===============================
-// PRESCRIPTION
+// LOAD APPROVED APPOINTMENTS
 // ===============================
-async function createPrescription(appointmentId) {
-    console.log(typeof appointmentId, appointmentId);
+async function loadApprovedAppointments() {
+ console.log("loadApprovedAppointments called");
+    try {
 
+        const res = await fetch(`${BASE_URL}/api/appointments/`, {
+            headers: {
+                "Authorization": `Bearer ${getToken()}`
+            }
+        });
 
-    const diagnosis = prompt("Enter Diagnosis:");
-    const medicines = prompt("Enter Medicines:");
+        const data = await res.json();
+        const appointments = data.results || data || [];
+     
+        const select = document.getElementById("appointmentSelect");
 
-    if (!diagnosis || !medicines) {
-        alert("Fields required");
+        select.innerHTML = `
+            <option value="">Select Approved Appointment</option>
+        `;
+
+        appointments.forEach(item => {
+
+            if (item.status === "approved") {
+
+                select.innerHTML += `
+                    <option value="${item.id}">
+                        #${item.id} - ${item.patient_name}
+                    </option>
+                `;
+
+            }
+
+        });
+
+    } catch (err) {
+
+        console.error(err);
+
+    }
+
+}
+
+// ===============================
+// SAVE PRESCRIPTION
+// ===============================
+async function savePrescription() {
+
+    const appointment = document.getElementById("appointmentSelect").value;
+    const diagnosis = document.getElementById("diagnosis").value;
+    const medicines = document.getElementById("medicines").value;
+    const notes = document.getElementById("notes").value;
+
+    if (!appointment || !diagnosis || !medicines) {
+        alert("Please fill all required fields.");
         return;
     }
 
@@ -157,34 +216,42 @@ async function createPrescription(appointmentId) {
                 "Authorization": `Bearer ${getToken()}`
             },
             body: JSON.stringify({
-                appointment: Number(appointmentId),
+                appointment: Number(appointment),
                 diagnosis: diagnosis.trim(),
-                medicines: medicines.trim()
+                medicines: medicines.trim(),
+                notes: notes.trim()
             })
-            
         });
 
         const data = await response.json();
 
-        console.log("STATUS:", response.status);
-        console.log("RESPONSE:", data);
+        console.log(data);
 
         if (!response.ok) {
             alert(JSON.stringify(data));
             return;
         }
 
-        alert("Prescription created successfully");
+        alert("Prescription Saved Successfully");
 
+        // Form Reset
+        document.getElementById("appointmentSelect").value = "";
+        document.getElementById("diagnosis").value = "";
+        document.getElementById("medicines").value = "";
+        document.getElementById("notes").value = "";
+
+        // Refresh Data
+        loadApprovedAppointments();
         loadAppointments();
         loadPrescriptions();
 
     } catch (error) {
+
         console.error(error);
-        alert("Network error");
+        alert("Network Error");
+
     }
 }
-
 // ===============================
 // PRESCRIPTIONS LIST
 // ===============================
@@ -214,6 +281,15 @@ async function loadPrescriptions() {
                     <td>${p.diagnosis}</td>
                     <td>${p.medicines}</td>
                     <td>${formatDate(p.created_at)}</td>
+                    <td>
+                     <button
+                class="btn btn-info btn-sm"
+                onclick="viewPrescription(${p.id})">
+
+                View
+
+                </button>
+               </td>
                 </tr>
             `;
         });
@@ -223,6 +299,50 @@ async function loadPrescriptions() {
     }
 }
 
+
+// ===============================
+// VIEW PRESCRIPTION
+// ===============================
+async function viewPrescription(id) {
+
+    try {
+
+        const res = await fetch(`${BASE_URL}/api/prescriptions/${id}/`, {
+            headers: {
+                "Authorization": `Bearer ${getToken()}`
+            }
+        });
+
+        const data = await res.json();
+
+        console.log(data);
+
+        if (!res.ok) {
+            alert(data.detail || "Unable to load prescription");
+            return;
+        }
+
+        document.getElementById("viewPatient").textContent = data.patient_name;
+        document.getElementById("viewDoctor").textContent = data.doctor_name;
+        document.getElementById("viewDiagnosis").textContent = data.diagnosis;
+        document.getElementById("viewMedicines").textContent = data.medicines;
+        document.getElementById("viewNotes").textContent = data.notes || "-";
+        document.getElementById("viewDate").textContent = formatDate(data.created_at);
+
+        const modal = new bootstrap.Modal(
+            document.getElementById("prescriptionModal")
+        );
+
+        modal.show();
+
+    } catch (err) {
+
+        console.error(err);
+        alert("Network Error");
+
+    }
+
+}
 
 // ===============================
 // SCHEDULE
@@ -298,8 +418,30 @@ async function addSchedule() {
         console.error(err);
     }
 }
+// ================
+// open prescription
+// ================
+function openPrescriptionTab(appointmentId) {
 
+    // Appointment tab hide
+    document.getElementById("appointmentsTab").style.display = "none";
 
+    // Schedule tab hide
+    document.getElementById("scheduleTab").style.display = "none";
+
+    // Prescription tab show
+    document.getElementById("prescriptionTab").style.display = "block";
+
+    // Dropdown reload
+    loadApprovedAppointments().then(() => {
+
+        document.getElementById("appointmentSelect").value = appointmentId;
+
+    });
+
+    // Existing prescriptions reload
+    loadPrescriptions();
+}
 // ===============================
 // TABS
 // ===============================
@@ -313,9 +455,11 @@ function showTab(tabName) {
 
     if (tabName === "appointments") loadAppointments();
     if (tabName === "schedule") loadSchedules();
-    if (tabName === "prescription") loadPrescriptions();
+    if (tabName === "prescription") {
+    loadApprovedAppointments();
+    loadPrescriptions();
 }
-
+}
 
 // ===============================
 // LOGOUT
@@ -336,15 +480,19 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    loadAppointments();
+    loadAppointments("all");
     loadSchedules();
     loadPrescriptions();
 });
 
-
+function printPrescription() {
+    window.print();
+}
 // expose
 window.addSchedule = addSchedule;
 window.loadSchedules = loadSchedules;
 window.showTab = showTab;
 window.updateStatus = updateStatus;
-window.createPrescription = createPrescription;
+
+window.savePrescription = savePrescription;
+window.loadApprovedAppointments = loadApprovedAppointments;

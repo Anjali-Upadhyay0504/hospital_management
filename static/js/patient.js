@@ -4,62 +4,65 @@ const token = localStorage.getItem("access_token");
 
 
 // ==========================
-// Helper: Safe JSON parser
+// SAFE JSON
 // ==========================
 async function safeJson(response) {
     try {
         return await response.json();
     } catch (e) {
-        console.error("Invalid JSON response", e);
+        console.error("Invalid JSON", e);
         return null;
     }
 }
 
 
 // ==========================
-// Load Doctors
+// FORMAT DATE
+// ==========================
+function formatDate(dateString) {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleString();
+}
+
+
+// ==========================
+// LOAD DOCTORS
 // ==========================
 async function loadDoctors() {
 
     try {
 
-        const response = await fetch(
-            `${BASE_URL}/api/doctor/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+        const res = await fetch(`${BASE_URL}/api/doctor/`, {
+            headers: {
+                Authorization: `Bearer ${token}`
             }
-        );
+        });
 
-        const data = await safeJson(response);
+        const data = await safeJson(res);
 
-        const doctors = Array.isArray(data)
-            ? data
-            : data?.results || [];
+        const doctors = data?.results || data || [];
 
         const select = document.getElementById("doctorSelect");
+        select.innerHTML = `<option value="">Select Doctor</option>`;
 
-        select.innerHTML = '<option value="">Select Doctor</option>';
-
-        doctors.forEach(doctor => {
+        doctors.forEach(d => {
 
             select.innerHTML += `
-                <option value="${doctor.id}">
-                    Dr. ${doctor.username} - ${doctor.specialization} - ₹${doctor.fee}
+                <option value="${d.id}">
+                    Dr. ${d.username} - ${d.specialization} - ₹${d.fee}
                 </option>
             `;
         });
 
-    } catch (error) {
-        console.error(error);
-        alert("Unable to load doctors");
+    } catch (err) {
+        console.error(err);
+        alert("Failed to load doctors");
     }
 }
 
 
 // ==========================
-// Book Appointment
+// BOOK APPOINTMENT
 // ==========================
 async function bookAppointment() {
 
@@ -74,131 +77,153 @@ async function bookAppointment() {
 
     try {
 
-        const response = await fetch(
-            `${BASE_URL}/api/appointments/`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    doctor,
-                    appointment_date,
-                    reason
-                })
-            }
-        );
+        const res = await fetch(`${BASE_URL}/api/appointments/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                doctor,
+                appointment_date,
+                reason
+            })
+        });
 
-        const data = await safeJson(response);
+        const data = await safeJson(res);
 
-        if (!response.ok) {
+        if (!res.ok) {
             alert(JSON.stringify(data));
             return;
         }
 
-        alert("Appointment Booked Successfully");
+        alert("Appointment booked successfully");
 
         loadAppointments();
 
-    } catch (error) {
-        console.error(error);
-        alert("Booking Failed");
+    } catch (err) {
+        console.error(err);
+        alert("Booking failed");
     }
 }
 
 
 // ==========================
-// Load Appointments
+// LOAD APPOINTMENTS
 // ==========================
 async function loadAppointments() {
 
     try {
 
-        const response = await fetch(
-            `${BASE_URL}/api/appointments/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+        const res = await fetch(`${BASE_URL}/api/appointments/`, {
+            headers: {
+                Authorization: `Bearer ${token}`
             }
-        );
+        });
 
-        const data = await safeJson(response);
+        const data = await safeJson(res);
 
-        const appointments = Array.isArray(data)
-            ? data
-            : data?.results || [];
+        const appointments = data?.results || data || [];
 
         const table = document.getElementById("appointmentTable");
-
         table.innerHTML = "";
 
-        appointments.forEach(item => {
+        if (appointments.length === 0) {
+            table.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-muted">
+                        No appointments found
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        appointments.forEach(a => {
 
             table.innerHTML += `
                 <tr>
-                    <td>${item.id}</td>
-                    <td>${item.doctor_name || item.doctor}</td>
-                    <td>${formatDate(item.appointment_date)}</td>
-                    <td>${item.status}</td>
+                    <td>${a.id}</td>
+                    <td>${a.doctor_name || a.doctor}</td>
+                    <td>${formatDate(a.appointment_date)}</td>
+                    <td>
+                        <span class="badge bg-secondary">
+                            ${a.status}
+                        </span>
+                    </td>
                 </tr>
             `;
         });
 
-    } catch (error) {
-        console.error(error);
-        alert("Unable to load appointments");
+    } catch (err) {
+        console.error(err);
+        alert("Failed to load appointments");
     }
 }
 
 
 // ==========================
-// Load Prescriptions
+// LOAD PRESCRIPTIONS
 // ==========================
 async function loadPrescriptions() {
 
-    try {
+    const res = await fetch(`${BASE_URL}/api/prescriptions/`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
 
-        const response = await fetch(
-            `${BASE_URL}/api/prescriptions/`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
-        );
+    const data = await safeJson(res);
+    const prescriptions = data?.results || data || [];
 
-        const data = await safeJson(response);
+    const container = document.getElementById("prescriptionContainer");
+    container.innerHTML = "";
 
-        const prescriptions = Array.isArray(data)
-            ? data
-            : data?.results || [];
-
-        const table = document.getElementById("prescriptionTable");
-
-        table.innerHTML = "";
-
-        prescriptions.forEach(item => {
-
-            table.innerHTML += `
-                <tr>
-                    <td>${item.id}</td>
-                    <td>${item.doctor_name || "N/A"}</td>
-                    <td>${item.diagnosis || "N/A"}</td>
-                    <td>${item.medicines || "N/A"}</td>
-                </tr>
-            `;
-        });
-
-    } catch (error) {
-        console.error(error);
-        alert("Unable to load prescriptions");
+    if (!prescriptions.length) {
+        container.innerHTML = `
+            <p class="text-muted">No completed prescriptions yet</p>
+        `;
+        return;
     }
-}
 
-// ==========================
-// Become Doctor
+    prescriptions.forEach(p => {
+
+        container.innerHTML += `
+            <div class="col-md-6">
+
+                <div class="card shadow-sm p-3">
+
+                    <div class="d-flex justify-content-between">
+
+                        <h6>Dr. ${p.doctor_name}</h6>
+
+                        <span class="badge bg-success">
+                            Completed
+                        </span>
+
+                    </div>
+
+                    <hr>
+
+                    <p><b>Diagnosis:</b> ${p.diagnosis}</p>
+
+                    <p><b>Medicines:</b> ${p.medicines}</p>
+
+                    <button class="btn btn-primary btn-sm mt-2"
+                        onclick="viewPrescription(${p.id})">
+
+                        View Prescription
+
+                    </button>
+
+                </div>
+
+            </div>
+        `;
+    });
+}
+//===================
+// BECOME DOCTOR REQUEST
 // ==========================
 async function requestDoctor() {
 
@@ -214,43 +239,96 @@ async function requestDoctor() {
 
     try {
 
-        const response = await fetch(
-            `${BASE_URL}/api/doctor/request_doctor/`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    specialization,
-                    experience,
-                    qualification,
-                    fee
-                })
-            }
-        );
+        const res = await fetch(`${BASE_URL}/api/doctor/request_doctor/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                specialization,
+                experience,
+                qualification,
+                fee
+            })
+        });
 
-        const data = await safeJson(response);
-        console.log("Status:", response.status);
-        console.log("Response:", data);
-        if (!response.ok) {
-            alert(data.error || JSON.stringify(data));
+        const data = await safeJson(res);
+
+        if (!res.ok) {
+            alert(JSON.stringify(data));
             return;
         }
 
         document.getElementById("doctorRequestMessage").innerHTML =
-            `<div class="alert alert-success">
-                Doctor request submitted successfully.
-            </div>`;
+            `<div class="alert alert-success">Request submitted successfully</div>`;
 
-    } catch (error) {
-        console.error(error);
-        alert("Unable to submit request");
+    } catch (err) {
+        console.error(err);
+        alert("Request failed");
     }
 }
+
+
 // ==========================
-// Logout
+// SCROLL FUNCTIONS (FOR CARDS)
+// ==========================
+function goToBooking() {
+    document.getElementById("doctorSelect").scrollIntoView({ behavior: "smooth" });
+}
+
+function goToAppointments() {
+    document.getElementById("appointmentTable").scrollIntoView({ behavior: "smooth" });
+}
+
+function goToPrescriptions() {
+    document.getElementById("prescriptionTable").scrollIntoView({ behavior: "smooth" });
+}
+
+let currentPrescription = null;
+async function viewPrescription(id) {
+
+    const res = await fetch(`${BASE_URL}/api/prescriptions/${id}/`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    const data = await res.json();
+
+    document.getElementById("mDoctor").innerText = "Dr. " + data.doctor_name;
+    document.getElementById("mDiagnosis").innerText = data.diagnosis;
+    document.getElementById("mMedicines").innerText = data.medicines;
+    document.getElementById("mNotes").innerText = data.notes || "-";
+    document.getElementById("mDate").innerText = formatDate(data.created_at);
+
+    new bootstrap.Modal(document.getElementById("prescriptionModal")).show();
+}function printPrescription() {
+
+    const printContent = document.getElementById("printArea").innerHTML;
+
+    const win = window.open("", "", "width=900,height=650");
+
+    win.document.write(`
+        <html>
+        <head>
+            <title>Prescription</title>
+            <style>
+                body { font-family: Arial; padding: 20px; }
+                h5 { color: #000; }
+            </style>
+        </head>
+        <body>
+            ${printContent}
+        </body>
+        </html>
+    `);
+
+    win.document.close();
+    win.print();
+}
+// ==========================
+// LOGOUT
 // ==========================
 function logout() {
 
@@ -262,16 +340,7 @@ function logout() {
 
 
 // ==========================
-// Format Date
-// ==========================
-function formatDate(dateString) {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleString();
-}
-
-
-// ==========================
-// Initial Load
+// INIT
 // ==========================
 loadDoctors();
 loadAppointments();

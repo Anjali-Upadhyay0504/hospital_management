@@ -69,5 +69,24 @@ body {
     background: white;
 }
 
-.table thead {
+
+
+
+@media print {
+
+    body * {
+        visibility: hidden;
+    }
+
+    #prescriptionModal, #prescriptionModal * {
+        visibility: visible;
+    }
+
+    #prescriptionModal {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+}
    

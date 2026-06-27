@@ -5,7 +5,7 @@ from .models import Prescription
 class PrescriptionSerializer(serializers.ModelSerializer):
 
     patient_name = serializers.CharField(
-        source="appointment.patient.user.username",
+        source="appointment.patient.username",
         read_only=True
     )
 
@@ -15,9 +15,7 @@ class PrescriptionSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-
         model = Prescription
-
         fields = [
             "id",
             "appointment",
