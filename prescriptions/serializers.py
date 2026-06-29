@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Prescription
 
 
+
+
 class PrescriptionSerializer(serializers.ModelSerializer):
 
     patient_name = serializers.CharField(
@@ -32,3 +34,5 @@ class PrescriptionSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         )
+
+       

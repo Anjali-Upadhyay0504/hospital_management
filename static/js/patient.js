@@ -1,188 +1,219 @@
 const BASE_URL = "http://127.0.0.1:8000";
 
-const token = localStorage.getItem("access_token");
-
+// ALWAYS get fresh token
+function getToken() {
+    return localStorage.getItem("access_token");
+}
 
 // ==========================
 // SAFE JSON
 // ==========================
-async function safeJson(response) {
+async function safeJson(res) {
     try {
-        return await response.json();
-    } catch (e) {
-        console.error("Invalid JSON", e);
+        return await res.json();
+    } catch {
         return null;
     }
 }
 
-
 // ==========================
 // FORMAT DATE
 // ==========================
-function formatDate(dateString) {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
+function formatDate(date) {
+    return date ? new Date(date).toLocaleString() : "-";
 }
-
 
 // ==========================
 // LOAD DOCTORS
 // ==========================
 async function loadDoctors() {
 
-    try {
+    const res = await fetch(`${BASE_URL}/api/doctor/`, {
+        headers: {
+            Authorization: `Bearer ${getToken()}`
+        }
+    });
 
-        const res = await fetch(`${BASE_URL}/api/doctor/`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
+    const data = await safeJson(res);
+    const doctors = data?.results || data || [];
 
-        const data = await safeJson(res);
+    const select = document.getElementById("doctorSelect");
+    select.innerHTML = `<option value="">Select Doctor</option>`;
 
-        const doctors = data?.results || data || [];
+    doctors.forEach(d => {
+        select.innerHTML += `
+            <option value="${d.id}">
+                Dr. ${d.username} - ${d.specialization} - ₹${d.fee}
+            </option>
+        `;
+    });
+    const doctorSelect = document.getElementById("doctorSelect");
+    const appointmentDate = document.getElementById("appointmentDate");
 
-        const select = document.getElementById("doctorSelect");
-        select.innerHTML = `<option value="">Select Doctor</option>`;
-
-        doctors.forEach(d => {
-
-            select.innerHTML += `
-                <option value="${d.id}">
-                    Dr. ${d.username} - ${d.specialization} - ₹${d.fee}
-                </option>
-            `;
-        });
-
-    } catch (err) {
-        console.error(err);
-        alert("Failed to load doctors");
-    }
+    doctorSelect.addEventListener("change", loadAvailableSlots);
+    appointmentDate.addEventListener("change", loadAvailableSlots);
 }
 
+// ==========================
+// LOAD SLOTS
+// ==========================
 
+async function loadAvailableSlots() {
+
+    const doctor = document.getElementById("doctorSelect").value;
+    const date = document.getElementById("appointmentDate").value;
+    const timeSelect = document.getElementById("timeSlot");
+
+    timeSelect.innerHTML = `<option value="">Select Available Time</option>`;
+
+    if (!doctor || !date) {
+        return;
+    }
+
+    const res = await fetch(
+        `${BASE_URL}/api/appointments/available-slots/?doctor=${doctor}&date=${date}`,
+        {
+            headers: {
+                Authorization: `Bearer ${getToken()}`
+            }
+        }
+    );
+
+    const data = await safeJson(res);
+
+    console.log(data);
+
+    if (!res.ok) {
+        alert("Unable to load slots");
+        return;
+    }
+
+    data.slots.forEach(slot => {
+
+        timeSelect.innerHTML += `
+            <option value="${slot}">
+                ${slot}
+            </option>
+        `;
+    });
+}
 // ==========================
 // BOOK APPOINTMENT
 // ==========================
 async function bookAppointment() {
 
     const doctor = document.getElementById("doctorSelect").value;
-    const appointment_date = document.getElementById("appointmentDate").value;
+    const date = document.getElementById("appointmentDate").value;
+    const time = document.getElementById("timeSlot").value;
     const reason = document.getElementById("reason").value;
 
-    if (!doctor || !appointment_date || !reason) {
+    if (!doctor || !date || !time || !reason) {
         alert("Fill all fields");
         return;
     }
 
-    try {
+    const appointment_date = `${date}T${time}:00`;
 
-        const res = await fetch(`${BASE_URL}/api/appointments/`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                doctor,
-                appointment_date,
-                reason
-            })
-        });
+    console.log("Sending:", {
+        doctor,
+        appointment_date,
+        reason
+    });
 
-        const data = await safeJson(res);
+    const res = await fetch(`${BASE_URL}/api/appointments/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({
+            doctor,
+            appointment_date,
+            reason
+        })
+    });
 
-        if (!res.ok) {
-            alert(JSON.stringify(data));
-            return;
-        }
+    const data = await safeJson(res);
 
-        alert("Appointment booked successfully");
-
-        loadAppointments();
-
-    } catch (err) {
-        console.error(err);
-        alert("Booking failed");
+    if (!res.ok) {
+        console.log(data);
+        alert(JSON.stringify(data));
+        return;
     }
-}
 
+    alert("Appointment booked");
+    loadAppointments();
+}
 
 // ==========================
 // LOAD APPOINTMENTS
 // ==========================
 async function loadAppointments() {
 
-    try {
-
-        const res = await fetch(`${BASE_URL}/api/appointments/`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-
-        const data = await safeJson(res);
-
-        const appointments = data?.results || data || [];
-
-        const table = document.getElementById("appointmentTable");
-        table.innerHTML = "";
-
-        if (appointments.length === 0) {
-            table.innerHTML = `
-                <tr>
-                    <td colspan="4" class="text-center text-muted">
-                        No appointments found
-                    </td>
-                </tr>
-            `;
-            return;
+    const res = await fetch(`${BASE_URL}/api/appointments/`, {
+        headers: {
+            Authorization: `Bearer ${getToken()}`
         }
+    });
 
-        appointments.forEach(a => {
+    const data = await safeJson(res);
+    const appointments = data?.results || data || [];
 
-            table.innerHTML += `
-                <tr>
-                    <td>${a.id}</td>
-                    <td>${a.doctor_name || a.doctor}</td>
-                    <td>${formatDate(a.appointment_date)}</td>
-                    <td>
-                        <span class="badge bg-secondary">
-                            ${a.status}
-                        </span>
-                    </td>
-                </tr>
-            `;
-        });
+    const table = document.getElementById("appointmentTable");
+    table.innerHTML = "";
 
-    } catch (err) {
-        console.error(err);
-        alert("Failed to load appointments");
+    if (!appointments.length) {
+        table.innerHTML = `<tr><td colspan="4" class="text-center">No appointments</td></tr>`;
+        return;
     }
+
+    appointments.forEach(a => {
+
+        let btn = "";
+
+    
+        if (a.status === "completed" && a.prescription_id) {
+        btn = `
+        <button class="btn btn-sm btn-success"
+            onclick="viewPrescription(${a.prescription_id})">
+            View Prescription
+        </button>
+    `;
 }
 
+        table.innerHTML += `
+            <tr>
+                <td>${a.id}</td>
+                <td>${a.doctor_name || a.doctor}</td>
+                <td>${formatDate(a.appointment_date)}</td>
+                <td>
+                    <span class="badge bg-secondary">${a.status}</span>
+                </td>
+                <td>${btn}</td>
+            </tr>
+        `;
+    });
+}
 
 // ==========================
-// LOAD PRESCRIPTIONS
+// LOAD PRESCRIPTIONS (FIXED UI)
 // ==========================
 async function loadPrescriptions() {
 
     const res = await fetch(`${BASE_URL}/api/prescriptions/`, {
         headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${getToken()}`
         }
     });
 
     const data = await safeJson(res);
     const prescriptions = data?.results || data || [];
 
-    const container = document.getElementById("prescriptionContainer");
+    const container = document.getElementById("prescriptionTable");
     container.innerHTML = "";
 
     if (!prescriptions.length) {
-        container.innerHTML = `
-            <p class="text-muted">No completed prescriptions yet</p>
-        `;
+        container.innerHTML = `<p class="text-muted">No prescriptions yet</p>`;
         return;
     }
 
@@ -190,111 +221,73 @@ async function loadPrescriptions() {
 
         container.innerHTML += `
             <div class="col-md-6">
+                <div class="card p-3 shadow-sm">
 
-                <div class="card shadow-sm p-3">
-
-                    <div class="d-flex justify-content-between">
-
-                        <h6>Dr. ${p.doctor_name}</h6>
-
-                        <span class="badge bg-success">
-                            Completed
-                        </span>
-
-                    </div>
-
-                    <hr>
+                    <h6>Dr. ${p.doctor_name}</h6>
 
                     <p><b>Diagnosis:</b> ${p.diagnosis}</p>
-
                     <p><b>Medicines:</b> ${p.medicines}</p>
 
-                    <button class="btn btn-primary btn-sm mt-2"
+                    <button class="btn btn-primary btn-sm"
                         onclick="viewPrescription(${p.id})">
-
-                        View Prescription
-
+                        View
                     </button>
 
                 </div>
-
             </div>
         `;
     });
 }
-//===================
-// BECOME DOCTOR REQUEST
-// ==========================
-async function requestDoctor() {
 
-    const specialization = document.getElementById("specialization").value;
-    const experience = document.getElementById("experience").value;
-    const qualification = document.getElementById("qualification").value;
-    const fee = document.getElementById("fee").value;
+function sendDoctorRequest() {
 
-    if (!specialization || !experience || !qualification) {
-        alert("Please fill all fields");
-        return;
-    }
+    const data = {
+        specialization: document.getElementById("reqSpecialization").value,
+        experience: document.getElementById("reqExperience").value,
+        qualification: document.getElementById("reqQualification").value,
+        fee: document.getElementById("reqFee").value
+    };
 
-    try {
+    fetch("/api/doctor/request_doctor/", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("access_token")
+    },
+    body: JSON.stringify(data)
+   })
+    .then(res => res.json())
+    .then(data => {
 
-        const res = await fetch(`${BASE_URL}/api/doctor/request_doctor/`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                specialization,
-                experience,
-                qualification,
-                fee
-            })
-        });
-
-        const data = await safeJson(res);
-
-        if (!res.ok) {
-            alert(JSON.stringify(data));
-            return;
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert("Doctor request submitted successfully!");
         }
 
-        document.getElementById("doctorRequestMessage").innerHTML =
-            `<div class="alert alert-success">Request submitted successfully</div>`;
-
-    } catch (err) {
-        console.error(err);
-        alert("Request failed");
-    }
+})
+.catch(err => {
+    console.error(err);
+    alert("Something went wrong!");
+});
 }
-
-
 // ==========================
-// SCROLL FUNCTIONS (FOR CARDS)
+// VIEW PRESCRIPTION MODAL
 // ==========================
-function goToBooking() {
-    document.getElementById("doctorSelect").scrollIntoView({ behavior: "smooth" });
-}
-
-function goToAppointments() {
-    document.getElementById("appointmentTable").scrollIntoView({ behavior: "smooth" });
-}
-
-function goToPrescriptions() {
-    document.getElementById("prescriptionTable").scrollIntoView({ behavior: "smooth" });
-}
-
-let currentPrescription = null;
 async function viewPrescription(id) {
 
     const res = await fetch(`${BASE_URL}/api/prescriptions/${id}/`, {
         headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${getToken()}`
         }
     });
 
-    const data = await res.json();
+    const data = await safeJson(res);
+
+    if (!res.ok) {
+        alert("Failed to load prescription");
+        return;
+    }
 
     document.getElementById("mDoctor").innerText = "Dr. " + data.doctor_name;
     document.getElementById("mDiagnosis").innerText = data.diagnosis;
@@ -303,7 +296,27 @@ async function viewPrescription(id) {
     document.getElementById("mDate").innerText = formatDate(data.created_at);
 
     new bootstrap.Modal(document.getElementById("prescriptionModal")).show();
-}function printPrescription() {
+}
+function scrollToSection(id) {
+
+    const el = document.getElementById(id);
+
+    console.log("Scrolling to:", id, el); // DEBUG
+
+    if (!el) {
+        alert("Section not found: " + id);
+        return;
+    }
+
+    el.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+// ==========================
+// PRINT
+// ==========================
+function printPrescription() {
 
     const printContent = document.getElementById("printArea").innerHTML;
 
@@ -311,33 +324,12 @@ async function viewPrescription(id) {
 
     win.document.write(`
         <html>
-        <head>
-            <title>Prescription</title>
-            <style>
-                body { font-family: Arial; padding: 20px; }
-                h5 { color: #000; }
-            </style>
-        </head>
-        <body>
-            ${printContent}
-        </body>
+        <body>${printContent}</body>
         </html>
     `);
 
-    win.document.close();
     win.print();
 }
-// ==========================
-// LOGOUT
-// ==========================
-function logout() {
-
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-
-    window.location.href = "/";
-}
-
 
 // ==========================
 // INIT

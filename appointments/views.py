@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date,datetime,timedelta
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -92,4 +92,58 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         return Response({
             "message": "Status updated successfully",
             "status": appointment.status
+        })
+    
+
+    # ==================
+    #  slot 
+    # =================
+    @action(detail=False, methods=["get"], url_path="available-slots")
+    def available_slots(self, request):
+
+        doctor_id = request.query_params.get("doctor")
+        date_str = request.query_params.get("date")
+
+        if not doctor_id or not date_str:
+            return Response(
+                {"error": "doctor and date are required"},
+                status=400
+            )
+
+        try:
+            doctor = DoctorProfile.objects.get(pk=doctor_id)
+        except DoctorProfile.DoesNotExist:
+            return Response({"error": "Doctor not found"}, status=404)
+
+        selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+        day = selected_date.strftime("%a").lower()
+
+        schedules = DoctorSchedule.objects.filter(
+            doctor=doctor,
+            day=day
+        )
+
+        slots = []
+
+        for schedule in schedules:
+
+            current = datetime.combine(selected_date, schedule.start_time)
+            end = datetime.combine(selected_date, schedule.end_time)
+
+            while current < end:
+
+                exists = Appointment.objects.filter(
+                    doctor=doctor,
+                    appointment_date=current,
+                    status__in=["pending", "approved"]
+                ).exists()
+
+                if not exists:
+                    slots.append(current.strftime("%H:%M"))
+
+                current += timedelta(minutes=30)
+
+        return Response({
+            "slots": slots
         })

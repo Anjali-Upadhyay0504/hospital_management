@@ -1,0 +1,122 @@
+body{
+    background:#f5f7fb;
+    font-family:'Segoe UI',sans-serif;
+}
+
+.container{
+    max-width:1400px;
+}
+
+h2,h4{
+    font-weight:700;
+}
+
+.btn-group .btn{
+    border-radius:10px !important;
+    margin-right:8px;
+    padding:10px 22px;
+}
+
+.card{
+    border:none;
+    border-radius:16px;
+    box-shadow:0 5px 18px rgba(0,0,0,.08);
+}
+
+.table{
+    background:white;
+    border-radius:12px;
+    overflow:hidden;
+}
+
+.table thead{
+    background:#2563eb;
+    color:white;
+}
+
+.table td{
+    vertical-align:middle;
+}
+
+.table tbody tr:hover{
+    background:#f1f7ff;
+}
+
+.form-control,
+.form-select{
+    border-radius:10px;
+}
+
+.modal-content{
+    border-radius:18px;
+}
+
+.btn{
+    border-radius:10px;
+}
+
+#appointmentsTab,
+#scheduleTab,
+#prescriptionTab{
+    background:white;
+    padding:25px;
+    border-radius:18px;
+    box-shadow:0 5px 18px rgba(0,0,0,.08);
+}
+
+.btn-primary{
+    background:#2563eb;
+    border:none;
+}
+
+.btn-success{
+    border:none;
+}
+
+.btn-warning{
+    color:white;
+}
+
+.btn-danger{
+    border:none;
+}
+
+.btn-info{
+    color:white;
+}
+
+.table-dark{
+    background:#2563eb!important;
+}
+
+.modal-header{
+    background:#2563eb;
+    color:white;
+}
+
+.modal-header .btn-close{
+    filter:invert(1);
+}
+
+textarea{
+    resize:none;
+}
+
+button{
+    transition:.3s;
+}
+
+button:hover{
+    transform:translateY(-2px);
+}
+
+hr{
+    margin:20px 0;
+}
+
+.navbar-box{
+    background:white;
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 5px 18px rgba(0,0,0,.08);
+}

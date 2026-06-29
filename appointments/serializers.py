@@ -5,8 +5,18 @@ from schedule.models import DoctorSchedule
 
 class AppointmentSerializer(serializers.ModelSerializer):
 
-    doctor_name = serializers.CharField(source="doctor.user.username", read_only=True)
-    patient_name = serializers.CharField(source="patient.username", read_only=True)
+    doctor_name = serializers.CharField(
+        source="doctor.user.username",
+        read_only=True
+    )
+
+    patient_name = serializers.CharField(
+        source="patient.username",
+        read_only=True
+    )
+
+    # Prescription ID
+    prescription_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Appointment
@@ -20,6 +30,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "duration",
             "reason",
             "status",
+            "prescription_id",
             "created_at"
         ]
 
@@ -29,7 +40,16 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "created_at",
             "patient_name",
             "doctor_name",
+            "prescription_id",
         )
+
+    # =========================
+    # GET PRESCRIPTION ID
+    # =========================
+    def get_prescription_id(self, obj):
+        if hasattr(obj, "prescription"):
+            return obj.prescription.id
+        return None
 
     # =========================
     # VALIDATION
@@ -47,7 +67,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
         appointment_time = appointment_datetime.time()
 
-        # 🔥 ADD DAY CHECK (IMPORTANT)
         day = appointment_datetime.strftime("%a").lower()
 
         # Duplicate check
@@ -60,14 +79,16 @@ class AppointmentSerializer(serializers.ModelSerializer):
                 "Doctor already has an appointment at this time"
             )
 
-        # Schedule check (FIXED)
+        # Schedule check
         schedules = DoctorSchedule.objects.filter(
             doctor=doctor,
             day=day
         )
 
         if not schedules.exists():
-            raise serializers.ValidationError("Doctor has no schedule for this day")
+            raise serializers.ValidationError(
+                "Doctor has no schedule for this day"
+            )
 
         allowed = False
 

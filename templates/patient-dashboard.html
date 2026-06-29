@@ -2,29 +2,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-
     <title>Patient Dashboard</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
+    <link rel="stylesheet" href="{% static 'css/patientdashboard.css' %}">
+    {% comment %} <style>
         body {
-            background: #f5f7fb;
+            background: #f3f6ff;
+            font-family: Arial;
+        }
+
+        .navbar-box {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .card {
-            border-radius: 12px;
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
 
         .section-title {
-            font-weight: 600;
+            font-weight: 700;
+            margin-bottom: 15px;
         }
 
-        .small-text {
-            font-size: 13px;
+        .quick-card {
+            cursor: pointer;
+            transition: 0.2s;
         }
-    </style>
 
+        .quick-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .badge {
+            font-size: 12px;
+        }
+
+        .prescription-card {
+            transition: 0.2s;
+        }
+
+        .prescription-card:hover {
+            transform: scale(1.02);
+        } {% endcomment %}
+    {% comment %} </style> {% endcomment %}
 </head>
 
 <body>
@@ -32,105 +58,139 @@
 <div class="container mt-4">
 
     <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center">
-        <h2>Patient Dashboard</h2>
-        <button onclick="logout()" class="btn btn-danger">Logout</button>
+    <div class="navbar-box d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">🩺 Patient Dashboard</h4>
+        <button onclick="logout()" class="btn btn-danger btn-sm">Logout</button>
     </div>
 
     <hr>
 
     <!-- QUICK ACTIONS -->
-    <div class="row mb-4">
+<div class="row g-3 mb-4">
 
-        <div class="col-md-4">
-            <div class="card p-3 text-center shadow-sm">
-                <h5>Book Appointment</h5>
-                <p class="text-muted small-text">Schedule with doctor</p>
-            </div>
+    <div class="col-md-4">
+        <div class="card p-3 text-center quick-card"
+            onclick="scrollToSection('bookingSection')">
+
+            <h6>📅 Book Appointment</h6>
+            <small class="text-muted">Schedule doctor visit</small>
+
         </div>
-
-        <div class="col-md-4">
-            <div class="card p-3 text-center shadow-sm">
-                <h5>My Appointments</h5>
-                <p class="text-muted small-text">View bookings</p>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card p-3 text-center shadow-sm">
-                <h5>Prescriptions</h5>
-                <p class="text-muted small-text">Medical history</p>
-            </div>
-        </div>
-
     </div>
 
-    <!-- BECOME DOCTOR -->
-    <div class="card p-4 mb-4 shadow-sm">
+    <div class="col-md-4">
+        <div class="card p-3 text-center quick-card"
+            onclick="scrollToSection('appointmentSection')">
 
-        <h4 class="section-title">Become a Doctor</h4>
+            <h6>📋 My Appointments</h6>
+            <small class="text-muted">Track status</small>
 
-        <input type="text" id="specialization" class="form-control mb-2" placeholder="Specialization">
-        <input type="number" id="experience" class="form-control mb-2" placeholder="Experience">
-        <input type="text" id="qualification" class="form-control mb-2" placeholder="Qualification">
-        <input type="number" id="fee" class="form-control mb-2" placeholder="Fee">
-
-        <button class="btn btn-success" onclick="requestDoctor()">
-            Submit Request
-        </button>
-
-        <div id="doctorRequestMessage" class="mt-2"></div>
-
+        </div>
     </div>
 
+    <!-- REQUEST DOCTOR -->
+    <div class="col-md-4">
+        <div class="card p-3 text-center quick-card"
+            onclick="scrollToSection('requestSection')">
+
+            <h6>🩺 Become Doctor</h6>
+            <small class="text-muted">Apply for doctor role</small>
+
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3 text-center quick-card"
+            onclick="scrollToSection('prescriptionSection')">
+
+            <h6>💊 Prescriptions</h6>
+            <small class="text-muted">Medical history</small>
+
+        </div>
+    </div>
+
+</div>
+<div class="card p-4 mb-4" id="requestSection">
+
+    <h5 class="section-title">Request to Become Doctor</h5>
+
+        <input type="text" id="reqSpecialization"
+            class="form-control mb-2"
+            placeholder="Specialization" />
+
+        <input type="number" id="reqExperience"
+            class="form-control mb-2"
+            placeholder="Experience (years)" />
+
+        <input type="text" id="reqQualification"
+            class="form-control mb-2"
+            placeholder="Qualification" />
+
+        <input type="number" id="reqFee"
+            class="form-control mb-2"
+            placeholder="Fee" />
+
+        <button onclick="sendDoctorRequest()" class="btn btn-success w-100">
+            Send Doctor Request
+    </button>
+
+</div>
     <!-- BOOK APPOINTMENT -->
-    <div class="card p-4 mb-4 shadow-sm">
+    <div class="card p-4 mb-4" id="bookingSection">
 
-        <h4 class="section-title">Book Appointment</h4>
+        <h5 class="section-title">Book Appointment</h5>
 
-        <select id="doctorSelect" class="form-select mb-3">
-            <option value="">Select Doctor</option>
+        <select id="doctorSelect" class="form-select mb-2"></select>
+
+        <input type="date"
+            id="appointmentDate"
+            class="form-control mb-2">
+
+        <select id="timeSlot" class="form-select mb-2">
+            <option value="">Select Available Time</option>
         </select>
 
-        <input type="datetime-local" id="appointmentDate" class="form-control mb-3">
-
-        <textarea id="reason" class="form-control mb-3" placeholder="Reason"></textarea>
-
-        <button onclick="bookAppointment()" class="btn btn-primary">
+        <textarea id="reason"
+                class="form-control mb-2"
+                placeholder="Reason"></textarea>
+        <button onclick="bookAppointment()" class="btn btn-primary w-100">
             Book Appointment
         </button>
 
     </div>
-
+ 
+</div>
     <!-- APPOINTMENTS -->
-    <div class="card p-4 mb-4 shadow-sm">
+    <div class="card p-4 mb-4" id="appointmentSection">
 
-        <h4 class="section-title">My Appointments</h4>
+        <h5 class="section-title">My Appointments</h5>
 
-        <table class="table table-bordered">
+        <table class="table table-hover">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
                     <th>Doctor</th>
                     <th>Date</th>
                     <th>Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
+
             <tbody id="appointmentTable"></tbody>
         </table>
 
     </div>
 
-    <!-- PRESCRIPTIONS (CARD UI) -->
-    <div class="card p-4 shadow-sm">
+    <!-- PRESCRIPTIONS -->
+    <!-- PRESCRIPTIONS -->
+<div class="card p-4" id="prescriptionSection">
 
-        <h4 class="section-title">My Prescriptions</h4>
+    <h5 class="section-title">My Prescriptions</h5>
 
-        <div class="row g-3" id="prescriptionTable"></div>
-
-    </div>
+    <div class="row g-3" id="prescriptionTable"></div>
 
 </div>
+
 
 <!-- PRESCRIPTION MODAL -->
 <div class="modal fade" id="prescriptionModal" tabindex="-1">
@@ -141,7 +201,7 @@
 
             <div class="modal-header">
                 <h5 class="modal-title">Prescription Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body" id="printArea">
@@ -149,13 +209,11 @@
                 <h5 id="mDoctor"></h5>
                 <hr>
 
-                <p><strong>Diagnosis:</strong> <span id="mDiagnosis"></span></p>
-                <p><strong>Medicines:</strong> <span id="mMedicines"></span></p>
-                <p><strong>Notes:</strong> <span id="mNotes"></span></p>
+                <p><b>Diagnosis:</b> <span id="mDiagnosis"></span></p>
+                <p><b>Medicines:</b> <span id="mMedicines"></span></p>
+                <p><b>Notes:</b> <span id="mNotes"></span></p>
 
-                <p class="text-muted">
-                    <small id="mDate"></small>
-                </p>
+                <small class="text-muted" id="mDate"></small>
 
             </div>
 
@@ -163,10 +221,6 @@
 
                 <button class="btn btn-secondary" onclick="printPrescription()">
                     Print
-                </button>
-
-                <button class="btn btn-success" onclick="downloadPDF()">
-                    Download PDF
                 </button>
 
             </div>

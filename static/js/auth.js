@@ -45,94 +45,96 @@ async function signup() {
 
 async function login() {
 
-    const username =
-        document.getElementById("username").value;
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
-    const password =
-        document.getElementById("password").value;
-
-    const response = await fetch(
-        `${BASE_URL}/api/token/`,
-        {
+    try {
+        const response = await fetch(`${BASE_URL}/api/token/`, {
             method: "POST",
-
             headers: {
                 "Content-Type": "application/json"
             },
-
             body: JSON.stringify({
                 username,
                 password
             })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.detail || "Invalid Credentials");
+            return;
         }
-    );
 
-    const data =
-        await response.json();
+        // =========================
+        // SAVE TOKENS (IMPORTANT)
+        // =========================
+        localStorage.setItem("access_token", data.access);
+        localStorage.setItem("refresh_token", data.refresh);
 
-    if (!response.ok) {
+        console.log("ACCESS TOKEN SAVED:", data.access);
 
-        alert("Invalid Credentials");
-        return;
+        // =========================
+        // GET USER & REDIRECT
+        // =========================
+        await getCurrentUser();
+
+    } catch (error) {
+        console.error("Login error:", error);
+        alert("Something went wrong during login");
     }
-
-    localStorage.setItem(
-        "access_token",
-        data.access
-    );
-
-    localStorage.setItem(
-        "refresh_token",
-        data.refresh
-    );
-
-    await getCurrentUser();
 }
-console.log("TOKEN:", token);
-
 async function getCurrentUser() {
 
-    const token =
-        localStorage.getItem("access_token");
+    const token = localStorage.getItem("access_token");
 
-    const response = await fetch(
-        `${BASE_URL}/api/accounts/me/`,
-        {
+    if (!token) {
+        alert("No token found. Please login again.");
+        window.location.href = "/login/";
+        return;
+    }
+
+    try {
+        const response = await fetch(`${BASE_URL}/api/accounts/me/`, {
+            method: "GET",
             headers: {
-                Authorization:
-                `Bearer ${token}`
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
             }
+        });
+
+        if (!response.ok) {
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+
+            alert("Session expired. Please login again.");
+            window.location.href = "/login/";
+            return;
         }
-    );
 
-    
+        const user = await response.json();
 
-    if (!response.ok) {
-        alert("Session expired. Please login again.");
-        window.location.href = "/login/";
-        return;
-    }
+        console.log("LOGGED IN USER:", user);
 
-    const user = await response.json();
+        if (user.role === "patient") {
+            window.location.href = "/patient-dashboard/";
+        }
 
-    if (!user || !user.role) {
-        alert("Invalid user data");
-        return;
-    }
+        else if (user.role === "doctor") {
+            window.location.href = "/doctor-dashboard/";
+        }
 
-    if (user.role === "patient") {
-        window.location.href = "/patient-dashboard/";
-    }
+        else if (user.role === "admin") {
+            window.location.href = "/admin-dashboard/";
+        }
 
-    else if (user.role === "doctor") {
-        window.location.href = "/doctor-dashboard/";
-    }
+        else {
+            window.location.href = "/login/";
+        }
 
-    else if (user.role === "admin") {
-        window.location.href = "/admin-dashboard/";
-    }
-
-    else {
-        window.location.href = "/login/";
+    } catch (error) {
+        console.error("User fetch error:", error);
+        alert("Failed to get user info");
     }
 }
