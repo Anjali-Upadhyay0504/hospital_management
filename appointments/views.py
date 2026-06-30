@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.decorators import action
+from rest_framework.decorators import api_view, permission_classes
 
 from .models import Appointment
 from .serializers import AppointmentSerializer
@@ -147,3 +148,19 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         return Response({
             "slots": slots
         })
+    
+
+
+   
+    @action(detail=True, methods=["post"])
+    def cancel(self, request, pk=None):
+
+        appointment = self.get_object()
+
+        if appointment.status == "completed":
+            return Response({"error": "Cannot cancel"}, status=400)
+
+        appointment.status = "cancelled"
+        appointment.save()
+
+        return Response({"message": "Cancelled"})

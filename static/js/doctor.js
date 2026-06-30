@@ -2,14 +2,6 @@ const BASE_URL = "http://127.0.0.1:8000";
 
 
 // ===============================
-// TOKEN
-// ===============================
-function getToken() {
-    return localStorage.getItem("access_token");
-}
-
-
-// ===============================
 // HELPERS
 // ===============================
 function formatDate(dateString) {
@@ -39,14 +31,8 @@ async function loadAppointments(view = "today") {
 
     try {
 
-        const res = await fetch(
-            `${BASE_URL}/api/appointments/?view=${view}`,
-            {
-                headers: {
-                    "Authorization": `Bearer ${getToken()}`
-                }
-            }
-        );
+        const res = await authFetch(
+            `${BASE_URL}/api/appointments/?view=${view}`);
 
         const data = await res.json();
         const appointments = data.results || data || [];
@@ -121,11 +107,11 @@ async function updateStatus(id, statusValue) {
 
     try {
 
-        const res = await fetch(`${BASE_URL}/api/appointments/${id}/update_status/`, {
+        const res = await authFetch(`${BASE_URL}/api/appointments/${id}/update_status/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${getToken()}`
+                
             },
             body: JSON.stringify({ status: statusValue })
         });
@@ -155,11 +141,7 @@ async function loadApprovedAppointments() {
  console.log("loadApprovedAppointments called");
     try {
 
-        const res = await fetch(`${BASE_URL}/api/appointments/`, {
-            headers: {
-                "Authorization": `Bearer ${getToken()}`
-            }
-        });
+        const res = await authFetch(`${BASE_URL}/api/appointments/`);
 
         const data = await res.json();
         const appointments = data.results || data || [];
@@ -209,11 +191,11 @@ async function savePrescription() {
 
     try {
 
-        const response = await fetch(`${BASE_URL}/api/prescriptions/`, {
+        const response = await authFetch(`${BASE_URL}/api/prescriptions/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${getToken()}`
+                
             },
             body: JSON.stringify({
                 appointment: Number(appointment),
@@ -259,11 +241,7 @@ async function loadPrescriptions() {
 
     try {
 
-        const res = await fetch(`${BASE_URL}/api/prescriptions/`, {
-            headers: {
-                "Authorization": `Bearer ${getToken()}`
-            }
-        });
+        const res = await authFetch(`${BASE_URL}/api/prescriptions/`);
 
         const data = await res.json();
         const prescriptions = data.results || data || [];
@@ -307,11 +285,7 @@ async function viewPrescription(id) {
 
     try {
 
-        const res = await fetch(`${BASE_URL}/api/prescriptions/${id}/`, {
-            headers: {
-                "Authorization": `Bearer ${getToken()}`
-            }
-        });
+        const res = await authFetch(`${BASE_URL}/api/prescriptions/${id}/`);
 
         const data = await res.json();
 
@@ -351,11 +325,7 @@ async function loadSchedules() {
 
     try {
 
-        const res = await fetch(`${BASE_URL}/api/schedule/`, {
-            headers: {
-                "Authorization": `Bearer ${getToken()}`
-            }
-        });
+        const res = await authFetch(`${BASE_URL}/api/schedule/`);
 
         const data = await res.json();
         const schedules = data.results || data || [];
@@ -391,11 +361,10 @@ async function addSchedule() {
 
     try {
 
-        const res = await fetch(`${BASE_URL}/api/schedule/`, {
+        const res = await authFetch(`${BASE_URL}/api/schedule/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${getToken()}`
             },
             body: JSON.stringify({
                 day,

@@ -28,11 +28,7 @@ function formatDate(date) {
 // ==========================
 async function loadDoctors() {
 
-    const res = await fetch(`${BASE_URL}/api/doctor/`, {
-        headers: {
-            Authorization: `Bearer ${getToken()}`
-        }
-    });
+    const res = await authFetch(`${BASE_URL}/api/doctor/`);
 
     const data = await safeJson(res);
     const doctors = data?.results || data || [];
@@ -120,18 +116,17 @@ async function bookAppointment() {
         reason
     });
 
-    const res = await fetch(`${BASE_URL}/api/appointments/`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({
-            doctor,
-            appointment_date,
-            reason
-        })
-    });
+    const res = await authFetch(`${BASE_URL}/api/appointments/`, {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        doctor,
+        appointment_date,
+        reason
+    })
+  });
 
     const data = await safeJson(res);
 
@@ -179,7 +174,16 @@ async function loadAppointments() {
             View Prescription
         </button>
     `;
-}
+        }
+       if (a.status !== "cancelled" && a.status !== "completed" && !a.prescription_id) {
+            btn += `
+                <button class="btn btn-sm btn-danger"
+                    onclick="cancelAppointment(${a.id})">
+                    Cancel
+                </button>
+            `;
+        }
+
 
         table.innerHTML += `
             <tr>
@@ -194,21 +198,50 @@ async function loadAppointments() {
         `;
     });
 }
+// ================
+// Canclled appointment
+// ===================
+async function cancelAppointment(id) {
+
+    try {
+        const res = await authFetch(`${BASE_URL}/api/appointments/${id}/cancel/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+               }
+            
+            
+        });
+    
+        const data = await res.json();
+
+        console.log("STATUS:", res.status);
+        console.log("RESPONSE:", data);
+
+        if (!res.ok) {
+            alert(data.error || JSON.stringify(data));
+            return;
+        }
+
+        alert("Cancelled successfully");
+        loadAppointments();
+
+    } catch (err) {
+        console.error("ERROR:", err);
+        alert("Network error");
+    }
+}
 
 // ==========================
 // LOAD PRESCRIPTIONS (FIXED UI)
 // ==========================
 async function loadPrescriptions() {
 
-    const res = await fetch(`${BASE_URL}/api/prescriptions/`, {
-        headers: {
-            Authorization: `Bearer ${getToken()}`
-        }
-    });
-
+    const res = await authFetch(`${BASE_URL}/api/prescriptions/`);
     const data = await safeJson(res);
     const prescriptions = data?.results || data || [];
-
+    console.log("Status:", res.status);
+    console.log("Prescriptions:", prescriptions);
     const container = document.getElementById("prescriptionTable");
     container.innerHTML = "";
 
@@ -220,7 +253,7 @@ async function loadPrescriptions() {
     prescriptions.forEach(p => {
 
         container.innerHTML += `
-            <div class="col-md-6">
+            <div class ="col-md-6">
                 <div class="card p-3 shadow-sm">
 
                     <h6>Dr. ${p.doctor_name}</h6>
@@ -248,11 +281,11 @@ function sendDoctorRequest() {
         fee: document.getElementById("reqFee").value
     };
 
-    fetch("/api/doctor/request_doctor/", {
+    authFetch(`${BASE_URL}/api/doctor/request_doctor/`, {
     method: "POST",
     headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("access_token")
+        
     },
     body: JSON.stringify(data)
    })
@@ -276,11 +309,7 @@ function sendDoctorRequest() {
 // ==========================
 async function viewPrescription(id) {
 
-    const res = await fetch(`${BASE_URL}/api/prescriptions/${id}/`, {
-        headers: {
-            Authorization: `Bearer ${getToken()}`
-        }
-    });
+    const res = await authFetch(`${BASE_URL}/api/prescriptions/${id}/`);
 
     const data = await safeJson(res);
 
