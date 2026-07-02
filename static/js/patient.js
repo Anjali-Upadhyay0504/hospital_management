@@ -360,9 +360,13 @@ function printPrescription() {
     win.print();
 }
 
+
+
+
 // ==========================
 // INIT
 // ==========================
 loadDoctors();
 loadAppointments();
 loadPrescriptions();
+loadNotifications();

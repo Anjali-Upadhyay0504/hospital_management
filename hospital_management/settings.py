@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'prescriptions',
     'doctor',
     'schedule',
-    'dashboard'
+    'dashboard',
+    'notifications'
 ]
 
 MIDDLEWARE = [

@@ -42,7 +42,8 @@ urlpatterns = [
     path('api/schedule/', include('schedule.urls')),
     path('api/prescriptions/', include('prescriptions.urls')),
     path('api/dashboard/', include('dashboard.urls')),
-
+    path( "api/notifications/", include("notifications.urls")
+),
     # =========================
     # AUTH (JWT)
     # =========================

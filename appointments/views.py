@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.decorators import action
 from rest_framework.decorators import api_view, permission_classes
-
+from notifications.utils import create_notification
 from .models import Appointment
 from .serializers import AppointmentSerializer
 from schedule.models import DoctorSchedule
@@ -64,11 +64,22 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         if user.role != "patient":
             raise PermissionDenied("Only patients can book appointment")
 
-        serializer.save(
+        appointment = serializer.save(
             patient=user,
             status="pending"
         )
 
+        print("Appointment created:", appointment.id)
+
+        print("Doctor user:", appointment.doctor.user.username)
+
+        create_notification(
+            receiver=appointment.doctor.user,
+            title="New Appointment",
+            message=f"{appointment.patient.username} booked an appointment."
+        )
+
+        print("Notification should be created")
     # =========================
     # UPDATE STATUS (SECURE)
     # =========================
@@ -89,7 +100,29 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
         appointment.status = new_status
         appointment.save()
+        if new_status == "approved":
 
+            create_notification(
+                receiver=appointment.patient,
+                title="Appointment Approved",
+                message="Your appointment has been approved."
+            )
+
+        elif new_status == "rejected":
+
+            create_notification(
+                receiver=appointment.patient,
+                title="Appointment Rejected",
+                message="Your appointment has been rejected."
+            )
+
+        elif new_status == "completed":
+
+            create_notification(
+                receiver=appointment.patient,
+                title="Appointment Completed",
+                message="Your appointment has been completed."
+            )
         return Response({
             "message": "Status updated successfully",
             "status": appointment.status
@@ -162,5 +195,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
         appointment.status = "cancelled"
         appointment.save()
-
+        create_notification(
+            receiver=appointment.doctor.user,
+            title="Appointment Cancelled",
+            message=f"{appointment.patient.username} cancelled the appointment."
+        )
         return Response({"message": "Cancelled"})

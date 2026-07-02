@@ -1,5 +1,4 @@
 
-
 async function signup() {
 
     const username = document.getElementById("username").value;
@@ -9,7 +8,6 @@ async function signup() {
 
     msg.innerHTML = "";
 
-    // validation
     if (!username || !password || !confirm_password) {
         msg.innerHTML = "<span class='text-danger'>All fields required</span>";
         return;
@@ -22,18 +20,21 @@ async function signup() {
 
     try {
 
-        const res = await fetch("/api/signup/", {
+        const res = await fetch(`${window.BASE_URL}/api/accounts/signup/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                username,
-                password
-            })
+            body: JSON.stringify({ username, password })
         });
 
-        const data = await res.json();
+        let data = null;
+
+        try {
+            data = await res.json();
+        } catch (e) {
+            data = {};
+        }
 
         if (res.ok) {
             msg.innerHTML = "<span class='text-success'>Signup successful!</span>";
@@ -47,17 +48,17 @@ async function signup() {
         }
 
     } catch (error) {
+        console.error(error);
         msg.innerHTML = "<span class='text-danger'>Server error</span>";
     }
 }
-
 async function login() {
 
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
     if (!username || !password) {
-        alert("All fields required");
+        showToast("All fields required", "warning");
         return;
     }
 
@@ -71,10 +72,17 @@ async function login() {
             body: JSON.stringify({ username, password })
         });
 
-        const data = await response.json();
+        let data = null;
+
+        try {
+            data = await response.json();
+        } catch (e) {
+            showToast("Invalid server response", "error");
+            return;
+        }
 
         if (!response.ok) {
-            alert(data.detail || "Invalid Credentials");
+            showToast(data.detail || "Invalid credentials", "error");
             return;
         }
 
@@ -82,15 +90,15 @@ async function login() {
         localStorage.setItem("access_token", data.access);
         localStorage.setItem("refresh_token", data.refresh);
 
-        console.log("ACCESS TOKEN:", data.access);
-
         // get user info
-        const user = await checkAuth();
+        const user = await protectPage();
 
         if (!user) {
-            alert("User fetch failed");
+            showToast("User fetch failed", "error");
             return;
         }
+
+        showToast("Login successful", "success");
 
         // role-based routing
         if (user.role === "patient") {
@@ -102,10 +110,12 @@ async function login() {
         else if (user.role === "admin") {
             window.location.href = "/admin-dashboard/";
         }
-        
+        else {
+            showToast("Unknown role", "error");
+        }
 
     } catch (error) {
         console.error("Login error:", error);
-        alert("Something went wrong during login");
+        showToast("Something went wrong", "error");
     }
 }

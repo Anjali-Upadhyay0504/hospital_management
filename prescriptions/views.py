@@ -7,7 +7,7 @@ from .serializers import PrescriptionSerializer
 from django.db import transaction
 from appointments.models import Appointment
 from rest_framework.exceptions import PermissionDenied
- 
+from notifications.utils import create_notification
 
 from io import BytesIO
 from django.http import HttpResponse
@@ -72,6 +72,11 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
 
             rows = Appointment.objects.filter(id=appointment.id).update(
                 status="completed"
+            )
+            create_notification(
+                receiver=appointment.patient,
+                title="Prescription Ready",
+                message=f"Your prescription from Dr. {appointment.doctor.user.username} is now available."
             )
 
             print("UPDATED ROWS:", rows)

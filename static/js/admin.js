@@ -1,4 +1,4 @@
-const BASE_URL = "http://127.0.0.1:8000";
+
 const token = localStorage.getItem("access_token");
 
 let statusChartInstance = null;
@@ -14,22 +14,14 @@ function checkAuth() {
 
 // =========================
 // SAFE FETCH JSON
-// =========================
-async function safeJson(response) {
-    try {
-        return await response.json();
-    } catch (e) {
-        console.error("Invalid JSON");
-        return null;
-    }
-}
+
 
 // =========================
 // LOAD STATS (CARDS + CHARTS)
-// =========================
 async function loadStats() {
 
     try {
+
         const response = await fetch(`${BASE_URL}/api/dashboard/`, {
             headers: {
                 Authorization: `Bearer ${token}`
@@ -40,22 +32,25 @@ async function loadStats() {
             throw new Error("Dashboard API failed");
         }
 
-        const data = await response.json();
+        const data = await safeJson(response);
 
-        console.log("Dashboard Data:", data);
+        if (!data) {
+            showToast("Invalid dashboard response", "error");
+            return;
+        }
 
-        // ================= CARDS =================
         document.getElementById("doctorsCount").innerText = data.total_doctors || 0;
         document.getElementById("patientsCount").innerText = data.total_patients || 0;
         document.getElementById("appointmentsCount").innerText = data.total_appointments || 0;
         document.getElementById("prescriptionsCount").innerText = data.total_prescriptions || 0;
 
-        // ================= CHARTS =================
         renderStatusChart(data);
 
     } catch (error) {
+
         console.error(error);
-        alert("Unable to load dashboard data");
+        showToast("Unable to load dashboard", "error");
+
     }
 }
 
@@ -151,21 +146,37 @@ async function loadDoctorRequests() {
 // =========================
 async function approveRequest(id) {
 
-    const response = await fetch(`${BASE_URL}/api/doctor/${id}/approve_request/`, {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${token}`
+    try {
+
+        const response = await fetch(`${BASE_URL}/api/doctor/${id}/approve_request/`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const data = await safeJson(response);
+
+        if (response.ok) {
+
+            showToast(data?.message || "Doctor approved successfully", "success");
+
+            loadDoctorRequests();
+            loadStats();
+
+        } else {
+
+            showToast(data?.error || "Approval failed", "error");
+
         }
-    });
 
-    const data = await response.json();
+    } catch (error) {
 
-    alert(data.message || data.error);
+        console.error(error);
+        showToast("Server error", "error");
 
-    loadDoctorRequests();
-    loadStats();
+    }
 }
-
 // =========================
 // REJECT REQUEST
 // =========================
@@ -173,20 +184,38 @@ async function rejectRequest(id) {
 
     if (!confirm("Are you sure?")) return;
 
-    const response = await fetch(`${BASE_URL}/api/doctor/${id}/reject_request/`, {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${token}`
+    try {
+
+        const response = await fetch(`${BASE_URL}/api/doctor/${id}/reject_request/`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const data = await safeJson(response);
+
+        if (response.ok) {
+
+            showToast(data?.message || "Request rejected", "warning");
+
+            loadDoctorRequests();
+            loadStats();
+
+        } else {
+
+            showToast(data?.error || "Reject failed", "error");
+
         }
-    });
 
-    const data = await response.json();
+    } catch (error) {
 
-    alert(data.message || data.error);
+        console.error(error);
+        showToast("Server error", "error");
 
-    loadDoctorRequests();
-    loadStats();
+    }
 }
+
 
 // =========================
 // LOGOUT
@@ -207,4 +236,5 @@ document.addEventListener("DOMContentLoaded", function () {
     checkAuth();
     loadStats();
     loadDoctorRequests();
+    loadNotifications();
 });

@@ -6,7 +6,8 @@ from rest_framework.exceptions import PermissionDenied
 
 from .models import DoctorProfile, DoctorRequest
 from .serializers import DoctorSerializer, DoctorRequestSerializer
-
+from accounts.models import User
+from notifications.utils import create_notification
 
 class DoctorViewSet(viewsets.ModelViewSet):
 
@@ -103,7 +104,14 @@ class DoctorViewSet(viewsets.ModelViewSet):
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        admins = User.objects.filter(role="admin")
 
+        for admin in admins:
+            create_notification(
+                receiver=admin,
+                title="New Doctor Request",
+                message=f"{request.user.username} submitted a doctor request."
+            )
         return Response(serializer.data, status=201)
       # =========================
     # 🔥 REQUEST PENDING
@@ -167,7 +175,11 @@ class DoctorViewSet(viewsets.ModelViewSet):
             experience=doctor_request.experience,
             fee=doctor_request.fee
         )
-
+        create_notification(
+            receiver=user,
+            title="Doctor Request Approved",
+            message="Congratulations! Your doctor request has been approved by the admin."
+        )
         return Response({
             "message": "Doctor approved successfully"
         })
@@ -192,5 +204,9 @@ class DoctorViewSet(viewsets.ModelViewSet):
 
         doctor_request.status = "rejected"
         doctor_request.save()
-
+        create_notification(
+            receiver=doctor_request.user,
+            title="Doctor Request Rejected",
+            message="Sorry! Your doctor request has been rejected by the admin."
+        )
         return Response({"message": "Doctor request rejected successfully"})

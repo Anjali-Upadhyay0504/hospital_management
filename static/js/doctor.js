@@ -1,13 +1,6 @@
-const BASE_URL = "http://127.0.0.1:8000";
 
 
-// ===============================
-// HELPERS
-// ===============================
-function formatDate(dateString) {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
-}
+
 
 function getStatusBadge(status) {
     switch (status) {
@@ -31,10 +24,10 @@ async function loadAppointments(view = "today") {
 
     try {
 
-        const res = await authFetch(
+        const response = await authFetch(
             `${BASE_URL}/api/appointments/?view=${view}`);
 
-        const data = await res.json();
+        const data = await safeJson(response);
         const appointments = data.results || data || [];
 
         if (!appointments.length) {
@@ -107,7 +100,7 @@ async function updateStatus(id, statusValue) {
 
     try {
 
-        const res = await authFetch(`${BASE_URL}/api/appointments/${id}/update_status/`, {
+        const response = await authFetch(`${BASE_URL}/api/appointments/${id}/update_status/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -116,19 +109,23 @@ async function updateStatus(id, statusValue) {
             body: JSON.stringify({ status: statusValue })
         });
 
-        const data = await res.json();
+        const data = await safeJson(response);
 
-        if (!res.ok) {
-            alert(data.detail || data.error || "Failed");
+        if (!response.ok) {
+            showToast(data?.detail || data?.error || "Failed to update status", "error");
             return;
         }
 
-        alert("Status updated");
+        showToast("Appointment status updated successfully", "success");
+
         await loadAppointments();
 
     } catch (err) {
+
         console.error(err);
-        alert("Error updating status");
+
+        showToast("Error updating appointment status", "error");
+
     }
 }
 
@@ -141,9 +138,9 @@ async function loadApprovedAppointments() {
  console.log("loadApprovedAppointments called");
     try {
 
-        const res = await authFetch(`${BASE_URL}/api/appointments/`);
+        const response = await authFetch(`${BASE_URL}/api/appointments/`);
 
-        const data = await res.json();
+        const data = await safeJson(response);
         const appointments = data.results || data || [];
      
         const select = document.getElementById("appointmentSelect");
@@ -174,6 +171,7 @@ async function loadApprovedAppointments() {
 
 }
 
+
 // ===============================
 // SAVE PRESCRIPTION
 // ===============================
@@ -185,7 +183,7 @@ async function savePrescription() {
     const notes = document.getElementById("notes").value;
 
     if (!appointment || !diagnosis || !medicines) {
-        alert("Please fill all required fields.");
+        showToast("Please fill all required fields.", "warning");
         return;
     }
 
@@ -195,7 +193,6 @@ async function savePrescription() {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                
             },
             body: JSON.stringify({
                 appointment: Number(appointment),
@@ -205,16 +202,22 @@ async function savePrescription() {
             })
         });
 
-        const data = await response.json();
+        const data = await safeJson(response);
 
         console.log(data);
 
         if (!response.ok) {
-            alert(JSON.stringify(data));
+            showToast(
+                data?.detail ||
+                data?.error ||
+                JSON.stringify(data) ||
+                "Failed to save prescription",
+                "error"
+            );
             return;
         }
 
-        alert("Prescription Saved Successfully");
+        showToast("Prescription Saved Successfully", "success");
 
         // Form Reset
         document.getElementById("appointmentSelect").value = "";
@@ -230,7 +233,7 @@ async function savePrescription() {
     } catch (error) {
 
         console.error(error);
-        alert("Network Error");
+        showToast("Network Error", "error");
 
     }
 }
@@ -241,9 +244,9 @@ async function loadPrescriptions() {
 
     try {
 
-        const res = await authFetch(`${BASE_URL}/api/prescriptions/`);
+        const response = await authFetch(`${BASE_URL}/api/prescriptions/`);
 
-        const data = await res.json();
+        const data = await safeJson(response);
         const prescriptions = data.results || data || [];
 
         const table = document.getElementById("prescriptionTable");
@@ -285,16 +288,19 @@ async function viewPrescription(id) {
 
     try {
 
-        const res = await authFetch(`${BASE_URL}/api/prescriptions/${id}/`);
+        const response = await authFetch(`${BASE_URL}/api/prescriptions/${id}/`);
 
-        const data = await res.json();
+        const data = await safeJson(response);
 
         console.log(data);
 
-        if (!res.ok) {
-            alert(data.detail || "Unable to load prescription");
-            return;
-        }
+        if (!response.ok) {
+        showToast(
+            data?.detail || data?.error || "Unable to load prescription",
+            "error"
+        );
+        return;
+       }
 
         document.getElementById("viewPatient").textContent = data.patient_name;
         document.getElementById("viewDoctor").textContent = data.doctor_name;
@@ -309,10 +315,10 @@ async function viewPrescription(id) {
 
         modal.show();
 
-    } catch (err) {
+    } catch (error) {
 
-        console.error(err);
-        alert("Network Error");
+        console.error(error);
+        showToast("Network Error", "error")
 
     }
 
@@ -325,9 +331,9 @@ async function loadSchedules() {
 
     try {
 
-        const res = await authFetch(`${BASE_URL}/api/schedule/`);
+        const response = await authFetch(`${BASE_URL}/api/schedule/`);
 
-        const data = await res.json();
+        const data = await safeJson(response);
         const schedules = data.results || data || [];
 
         const table = document.getElementById("scheduleTable");
@@ -343,6 +349,7 @@ async function loadSchedules() {
                 </tr>
             `;
         });
+
 
     } catch (err) {
         console.error(err);
@@ -361,7 +368,7 @@ async function addSchedule() {
 
     try {
 
-        const res = await authFetch(`${BASE_URL}/api/schedule/`, {
+        const response = await authFetch(`${BASE_URL}/api/schedule/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -373,18 +380,26 @@ async function addSchedule() {
             })
         });
 
-        const data = await res.json();
+        const data = await safeJson(response);
 
-        if (!res.ok) {
-            alert(JSON.stringify(data));
+        if (!response.ok) {
+            showToast(
+                data?.detail || data?.error || JSON.stringify(data),
+                "error"
+            );
             return;
         }
 
-        alert("Schedule Added");
+        showToast("Schedule Added Successfully", "success");
+
         loadSchedules();
 
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+
+        console.error(error);
+
+        showToast("Network Error", "error");
+
     }
 }
 // ================
@@ -444,14 +459,15 @@ function logout() {
 // ===============================
 document.addEventListener("DOMContentLoaded", () => {
 
-    if (!getToken()) {
-        window.location.href = "/login/";
-        return;
-    }
+    if (!localStorage.getItem("access_token")) {
+    window.location.href = "/login/";
+    return;
+}
 
     loadAppointments("all");
     loadSchedules();
     loadPrescriptions();
+    loadNotifications();
 });
 
 function printPrescription() {

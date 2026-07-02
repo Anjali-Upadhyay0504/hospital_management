@@ -69,7 +69,59 @@
 <!-- MAIN -->
 <div class="main">
 
-    <h3>Welcome Doctor 👨‍⚕️</h3>
+   <div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h3 class="mb-0">
+        Welcome Doctor 👨‍⚕️
+    </h3>
+
+    <div class="d-flex align-items-center">
+
+        <!-- Notification -->
+        <div class="dropdown me-3">
+
+            <button
+                class="btn btn-primary position-relative"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+
+                🔔
+
+                <span
+                    id="notificationCount"
+                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+
+                    0
+
+                </span>
+
+            </button>
+
+            <ul
+                id="notificationList"
+                class="dropdown-menu dropdown-menu-end"
+                style="width:350px; max-height:400px; overflow-y:auto;">
+
+                <li class="dropdown-item text-muted">
+                    No Notifications
+                </li>
+
+            </ul>
+
+        </div>
+
+        <button
+            onclick="logout()"
+            class="btn btn-danger">
+
+            Logout
+
+        </button>
+
+    </div>
+
+</div>
 
     <!-- STATS CARDS (NO TAB SWITCHING) -->
     <div class="row my-3">
@@ -209,7 +261,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/common.js' %}"></script>
+<script src="{% static 'js/auth.js' %}"></script>
 <script src="{% static 'js/auth-guard.js' %}"></script>
+<script src="{% static 'js/notifications.js' %}"></script>
 <script src="{% static 'js/doctor.js' %}"></script>
-</body>
 </html>
