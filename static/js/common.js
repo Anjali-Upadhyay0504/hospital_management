@@ -1,4 +1,4 @@
-// ==========================
+// ==========================getE1
 // BASE CONFIG
 // ==========================
 if (!window.BASE_URL) {
@@ -37,7 +37,7 @@ function escapeHtml(text) {
 // ==========================
 // DOM HELPERS
 // ==========================
-function $(id) {
+function getE1(id) {
     return document.getElementById(id);
 }
 

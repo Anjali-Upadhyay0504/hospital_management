@@ -8,12 +8,20 @@ from .models import DoctorProfile, DoctorRequest
 from .serializers import DoctorSerializer, DoctorRequestSerializer
 from accounts.models import User
 from notifications.utils import create_notification
+from rest_framework import filters
 
 class DoctorViewSet(viewsets.ModelViewSet):
 
     serializer_class = DoctorSerializer
     permission_classes = [IsAuthenticated]
-
+    filter_backends = [
+    filters.SearchFilter,
+    ]
+    search_fields = [
+    "user__username",
+    "specialization",
+    
+     ]
     # =========================
     # GET DOCTORS
     # =========================

@@ -28,7 +28,11 @@ function formatDate(date) {
 // ==========================
 async function loadDoctors() {
 
-    const res = await authFetch(`${BASE_URL}/api/doctor/`);
+    const keyword = document.getElementById("doctorSearch").value;
+
+    const res = await authFetch(
+    `${BASE_URL}/api/doctor/?search=${encodeURIComponent(keyword)}`
+     );
 
     const data = await safeJson(res);
     const doctors = data?.results || data || [];
@@ -366,7 +370,56 @@ function printPrescription() {
 // ==========================
 // INIT
 // ==========================
-loadDoctors();
-loadAppointments();
-loadPrescriptions();
-loadNotifications();
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    // load data functions
+    loadAppointments();
+    loadPrescriptions();
+    loadNotifications();
+
+    console.log("jQuery:", $);
+    console.log("Select:", $("#doctorSelect"));
+    console.log("Select2:", $.fn.select2);
+
+    // Prevent double initialization
+    const $doctor = $("#doctorSelect");
+
+    if ($doctor.length > 0 && !$doctor.hasClass("select2-hidden-accessible")) {
+
+        $doctor.select2({
+            placeholder: "Search Doctor",
+            width: "100%",
+
+            ajax: {
+                transport: async function (params, success, failure) {
+                    try {
+
+                        const keyword = params.data.term || "";
+
+                        const response = await authFetch(
+                            `${BASE_URL}/api/doctor/?search=${encodeURIComponent(keyword)}`
+                        );
+
+                        const data = await safeJson(response);
+
+                        success({
+                            results: data.map(doc => ({
+                                id: doc.id,
+                                text: `Dr. ${doc.username}  - ${doc.specialization} - ${doc.fee}`
+                            }))
+                        });
+
+                    } catch (err) {
+                        console.error("Doctor API error:", err);
+                        failure(err);
+                    }
+                },
+
+                delay: 300
+            }
+        });
+
+    }
+
+});

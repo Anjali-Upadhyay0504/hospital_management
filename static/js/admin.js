@@ -1,5 +1,5 @@
 
-const token = localStorage.getItem("access_token");
+// const token = localStorage.getItem("access_token");
 
 let statusChartInstance = null;
 
@@ -22,7 +22,7 @@ async function loadStats() {
 
     try {
 
-        const response = await fetch(`${BASE_URL}/api/dashboard/`, {
+        const response = await authFetch(`${BASE_URL}/api/dashboard/`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -100,7 +100,7 @@ async function loadDoctorRequests() {
 
     try {
 
-        const response = await fetch(`${BASE_URL}/api/doctor/pending_requests/`, {
+        const response = await authFetch(`${BASE_URL}/api/doctor/pending_requests/`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -148,7 +148,7 @@ async function approveRequest(id) {
 
     try {
 
-        const response = await fetch(`${BASE_URL}/api/doctor/${id}/approve_request/`, {
+        const response = await authFetch(`${BASE_URL}/api/doctor/${id}/approve_request/`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${token}`
@@ -186,7 +186,7 @@ async function rejectRequest(id) {
 
     try {
 
-        const response = await fetch(`${BASE_URL}/api/doctor/${id}/reject_request/`, {
+        const response = await authFetch(`${BASE_URL}/api/doctor/${id}/reject_request/`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${token}`
@@ -220,13 +220,13 @@ async function rejectRequest(id) {
 // =========================
 // LOGOUT
 // =========================
-function logout() {
+// function logout() {
 
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+//     localStorage.removeItem("access_token");
+//     localStorage.removeItem("refresh_token");
 
-    window.location.href = "/login/";
-}
+//     window.location.href = "/login/";
+// }
 
 // =========================
 // INIT
