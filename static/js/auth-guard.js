@@ -1,10 +1,6 @@
-// ==========================
-// AUTH GUARD (PAGE PROTECTION ONLY)
-// ==========================
-
 async function protectPage(requiredRole = null) {
 
-    const token = localStorage.getItem("access_token");
+    const token = getToken();
 
     if (!token) {
         window.location.href = "/login/";
@@ -13,11 +9,7 @@ async function protectPage(requiredRole = null) {
 
     try {
 
-        const response = await fetch(`${BASE_URL}/api/accounts/me/`, {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
+        const response = await authFetch(`${BASE_URL}/api/accounts/me/`);
 
         if (!response.ok) {
             window.location.href = "/login/";
@@ -26,7 +18,6 @@ async function protectPage(requiredRole = null) {
 
         const user = await response.json();
 
-        // role check
         if (requiredRole && user.role !== requiredRole) {
             alert("Access Denied");
             window.location.href = "/login/";

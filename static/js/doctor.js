@@ -18,7 +18,6 @@ function getStatusBadge(status) {
 // appointmnet
 // ===============
 async function loadAppointments(view = "today") {
-
     const table = document.getElementById("appointmentTable");
     table.innerHTML = `<tr><td colspan="6" class="text-center">Loading...</td></tr>`;
 
@@ -445,6 +444,29 @@ function showTab(tabName) {
 }
 }
 
+
+
+async function loadDoctorDashboard() {
+
+    try {
+
+        const response = await authFetch(`${BASE_URL}/api/dashboard/doctor/`);
+        const data = await safeJson(response);
+
+        document.getElementById("totalAppointments").innerText =
+            data.total_appointments || 0;
+
+        document.getElementById("todayAppointments").innerText =
+            data.today_appointments || 0;
+
+        document.getElementById("pendingReports").innerText =
+            data.pending_appointments || 0;
+
+    } catch (error) {
+        console.error("Doctor dashboard error:", error);
+    }
+}
+
 // ===============================
 // LOGOUT
 // ===============================
@@ -464,6 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
 }
 
+    loadDoctorDashboard();
     loadAppointments("all");
     loadSchedules();
     loadPrescriptions();

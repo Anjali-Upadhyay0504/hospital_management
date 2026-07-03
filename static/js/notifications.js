@@ -1,3 +1,6 @@
+
+let shownNotifications = new Set();
+
 async function loadNotifications() {
 
     const res = await authFetch(`${BASE_URL}/api/notifications/`);
@@ -31,19 +34,26 @@ async function loadNotifications() {
 
     notifications.forEach(notification => {
 
-        const style = notification.is_read ? "" : "fw-bold";
+    const style = notification.is_read ? "" : "fw-bold";
+    // 🔥 ADD THIS (toast for unread notifications)
+    if (!notification.is_read && !shownNotifications.has(notification.id)) {
+        console.log("toast triggered", notification);
+    showToast(`${notification.title}: ${notification.message}`);
+    shownNotifications.add(notification.id);
+    }
+    
 
-        list.innerHTML += `
-            <li class="dropdown-item ${style}"
-                onclick="markNotificationRead(${notification.id})"
-                style="cursor:pointer">
+    list.innerHTML += `
+        <li class="dropdown-item ${style}"
+            onclick="markNotificationRead(${notification.id})"
+            style="cursor:pointer">
 
-                <strong>${notification.title}</strong><br>
-                <small>${notification.message}</small>
+            <strong>${notification.title}</strong><br>
+            <small>${notification.message}</small>
 
-            </li>
-        `;
-    });
+        </li>
+    `;
+  });
 }
 async function markNotificationRead(id) {
 
@@ -57,4 +67,17 @@ async function markNotificationRead(id) {
     }
 
     loadNotifications(); // Notification list refresh
+}
+
+function showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerText = message;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add("hide");
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
 }

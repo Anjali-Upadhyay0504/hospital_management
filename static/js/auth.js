@@ -1,3 +1,9 @@
+
+const BASE_URL = "http://127.0.0.1:8000";
+
+function getToken() {
+    return localStorage.getItem("access_token");
+}
 // ==========================
 // REFRESH ACCESS TOKEN
 // ==========================
@@ -10,7 +16,7 @@ async function refreshAccessToken() {
         return null;
     }
 
-    const response = await fetch(`${window.BASE_URL}/api/token/refresh/`, {
+    const response = await fetch(`${BASE_URL}/api/token/refresh/`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

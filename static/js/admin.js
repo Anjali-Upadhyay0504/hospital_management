@@ -1,59 +1,77 @@
 
-// const token = localStorage.getItem("access_token");
 
 let statusChartInstance = null;
 
-// =========================
-// AUTH CHECK
-// =========================
-function checkAuth() {
-    if (!token) {
-        window.location.href = "/login/";
-    }
-}
 
-// =========================
-// SAFE FETCH JSON
+
+
 
 
 // =========================
-// LOAD STATS (CARDS + CHARTS)
-async function loadStats() {
+// async function loadStats() {
+
+//     try {
+
+//         const response = await authFetch(`${BASE_URL}/api/dashboard/admin/`);
+
+//         if (!response.ok) throw new Error("Dashboard API failed");
+
+//         const data = await safeJson(response);
+
+//         if (!data) {
+//             showToast("Invalid dashboard response", "error");
+//             return;
+//         }
+
+//         document.getElementById("doctorsCount").innerText = data.total_doctors || 0;
+//         document.getElementById("patientsCount").innerText = data.total_patients || 0;
+//         document.getElementById("appointmentsCount").innerText = data.total_appointments || 0;
+//         document.getElementById("prescriptionsCount").innerText = data.total_prescriptions || 0;
+
+//         renderStatusChart(data);
+
+//     } catch (error) {
+//         console.error(error);
+//         showToast("Unable to load dashboard", "error");
+//     }
+// }
+async function loadAdminDashboard() {
 
     try {
 
-        const response = await authFetch(`${BASE_URL}/api/dashboard/`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error("Dashboard API failed");
-        }
-
+        const response = await authFetch(`${BASE_URL}/api/dashboard/admin/`);
         const data = await safeJson(response);
 
-        if (!data) {
-            showToast("Invalid dashboard response", "error");
-            return;
-        }
+        // cards update
+        document.getElementById("doctorsCount").innerText =
+            data.total_doctors || 0;
 
-        document.getElementById("doctorsCount").innerText = data.total_doctors || 0;
-        document.getElementById("patientsCount").innerText = data.total_patients || 0;
-        document.getElementById("appointmentsCount").innerText = data.total_appointments || 0;
-        document.getElementById("prescriptionsCount").innerText = data.total_prescriptions || 0;
+        document.getElementById("patientsCount").innerText =
+            data.total_patients || 0;
+
+        document.getElementById("appointmentsCount").innerText =
+            data.total_appointments || 0;
+
+        document.getElementById("prescriptionsCount").innerText =
+            data.total_prescriptions || 0;
+
+        document.getElementById("pendingAppointments").innerText =
+            data.pending_appointments || 0;
+
+        document.getElementById("approvedAppointments").innerText =
+            data.approved_appointments || 0;
+
+        document.getElementById("rejectedAppointments").innerText =
+            data.rejected_appointments || 0;
 
         renderStatusChart(data);
 
     } catch (error) {
 
-        console.error(error);
+        
         showToast("Unable to load dashboard", "error");
-
     }
 }
-
 // =========================
 // STATUS CHART (DOUGHNUT)
 // =========================
@@ -100,13 +118,11 @@ async function loadDoctorRequests() {
 
     try {
 
-        const response = await authFetch(`${BASE_URL}/api/doctor/pending_requests/`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
+        const response = await authFetch(`${BASE_URL}/api/doctor/pending_requests/`);
 
-        const requests = await response.json();
+        const data = await safeJson(response);
+
+        const requests = data.results || data || [];
 
         const table = document.getElementById("doctorRequestTable");
         table.innerHTML = "";
@@ -148,12 +164,12 @@ async function approveRequest(id) {
 
     try {
 
-        const response = await authFetch(`${BASE_URL}/api/doctor/${id}/approve_request/`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`
+        const response = await authFetch(
+            `${BASE_URL}/api/doctor/${id}/approve_request/`,
+            {
+                method: "POST"
             }
-        });
+        );
 
         const data = await safeJson(response);
 
@@ -186,12 +202,12 @@ async function rejectRequest(id) {
 
     try {
 
-        const response = await authFetch(`${BASE_URL}/api/doctor/${id}/reject_request/`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`
+        const response = await authFetch(`${BASE_URL}/api/doctor/${id}/reject_request/`,
+            {
+                method : "POST"
             }
-        });
+        );
+          
 
         const data = await safeJson(response);
 
@@ -217,24 +233,15 @@ async function rejectRequest(id) {
 }
 
 
-// =========================
-// LOGOUT
-// =========================
-// function logout() {
-
-//     localStorage.removeItem("access_token");
-//     localStorage.removeItem("refresh_token");
-
-//     window.location.href = "/login/";
-// }
 
 // =========================
 // INIT
 // =========================
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
 
-    checkAuth();
-    loadStats();
+    await protectPage("admin");
+
+    loadAdminDashboard();
     loadDoctorRequests();
     loadNotifications();
 });
