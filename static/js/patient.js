@@ -418,19 +418,19 @@ async function viewPrescription(id) {
         }
 
         document.getElementById("mDoctor").innerHTML =
-            p.doctor_name || "-";
+            data.doctor_name || "-";
 
         document.getElementById("mDate").innerHTML =
-            formatDate(p.created_at);
+            formatDate(data.created_at);
 
         document.getElementById("mDiagnosis").innerHTML =
-            p.diagnosis || "-";
+            data.diagnosis || "-";
 
         document.getElementById("mMedicines").innerHTML =
-            p.medicines || "-";
+            data.medicines || "-";
 
         document.getElementById("mNotes").innerHTML =
-            p.notes || "-";
+            data.notes || "-";
 
         new bootstrap.Modal(
             document.getElementById("prescriptionModal")
@@ -520,95 +520,9 @@ function printPrescription() {
 
 }
 /* =========================================
-        LOAD NOTIFICATIONS
+        LOAD DASHBOARD
 ========================================= */
 
-/* =========================================
-        LOAD NOTIFICATIONS
-========================================= */
-
-async function loadNotifications() {
-
-    try {
-
-        const res = await authFetch(
-            `${BASE_URL}/api/notifications/`
-        );
-
-        const data = await safeJson(res);
-
-        if (!res.ok) {
-            showToast("Unable to load notifications.", "error");
-            return;
-        }
-
-        const notifications = data?.results || data || [];
-
-        const list = getE1("notificationList");
-
-        if (!list) return;
-
-        list.innerHTML = "";
-
-        if (!notifications.length) {
-
-            list.innerHTML = `
-                <li class="list-group-item text-center text-muted">
-                    No Notifications
-                </li>
-            `;
-
-            return;
-
-        }
-
-        notifications.forEach(n => {
-
-            let icon = "🔔";
-
-            switch (n.type) {
-                case "appointment":
-                    icon = "📅";
-                    break;
-
-                case "prescription":
-                    icon = "💊";
-                    break;
-
-                case "payment":
-                    icon = "💳";
-                    break;
-            }
-
-            list.innerHTML += `
-                <li class="list-group-item">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <strong>
-                                ${icon} ${n.title || "Notification"}
-                            </strong>
-                            <br>
-                            <small class="text-muted">
-                                ${n.message}
-                            </small>
-                        </div>
-                    </div>
-                </li>
-            `;
-
-        });
-
-    }
-
-    catch (err) {
-
-        console.error("Notification Error:", err);
-
-        showToast("Unable to load notifications.", "error");
-
-    }
-
-}
 async function loadDashboard() {
 
     try {

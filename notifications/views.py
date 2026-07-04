@@ -56,3 +56,17 @@ def mark_notification_read(request, pk):
     return Response({
         "message": "Notification marked as read"
     })
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def mark_all_notifications_read(request):
+
+    Notification.objects.filter(
+        receiver=request.user,
+        is_read=False
+    ).update(is_read=True)
+
+    return Response({
+        "message": "All notifications marked as read"
+    })

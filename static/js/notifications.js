@@ -1,83 +1,342 @@
+/* =========================================
+        NOTIFICATIONS
+========================================= */
 
 let shownNotifications = new Set();
+let firstLoad = true;
 
 async function loadNotifications() {
 
-    const res = await authFetch(`${BASE_URL}/api/notifications/`);
+    try {
 
-    if (!res.ok) return;
+        const res = await authFetch(
+            `${BASE_URL}/api/notifications/`
+        );
 
-    const data = await safeJson(res);
+        const data = await safeJson(res);
 
-    // Backend se aane wala data
-    const notifications = data.results || [];
-    const unread = data.count_unread ?? 0;
+        if (!res.ok) {
 
-    // Notification count
-    const countEl = document.getElementById("notificationCount");
-    if (countEl) countEl.innerText = unread;
+            showToast(
+                "Unable to load notifications.",
+                "error"
+            );
 
-    // Notification list
-    const list = document.getElementById("notificationList");
-    if (!list) return;
+            return;
 
-    list.innerHTML = "";
+        }
 
-    if (notifications.length === 0) {
-        list.innerHTML = `
-            <li class="dropdown-item text-muted">
-                No Notifications
-            </li>
-        `;
-        return;
+        const notifications = data.results || [];
+        const unread = data.count_unread ?? 0;
+
+        /* ==========================
+                Bell Count
+        ========================== */
+
+        const countEl = getE1("notificationCount");
+
+        if (countEl) {
+
+            countEl.innerText = unread;
+
+            countEl.style.display =
+                unread > 0 ? "inline-block" : "none";
+
+        }
+
+        /* ==========================
+            Toast Only New Notification
+        ========================== */
+
+        notifications.forEach(notification => {
+
+            if (firstLoad) {
+
+                shownNotifications.add(notification.id);
+
+                return;
+
+            }
+
+            if (
+                !notification.is_read &&
+                !shownNotifications.has(notification.id)
+            ) {
+
+                shownNotifications.add(notification.id);
+
+                showToast(
+                    `${notification.title}: ${notification.message}`,
+                    "info"
+                );
+
+            }
+
+        });
+
+        firstLoad = false;
+
+        /* ==========================
+            Notification Dropdown
+        ========================== */
+
+        const list = getE1("notificationList");
+
+        if (!list) return;
+
+        list.innerHTML = "";
+
+        if (!notifications.length) {
+
+            list.innerHTML = `
+                <li class="dropdown-item text-center text-muted">
+                    No Notifications
+                </li>
+            `;
+
+            return;
+
+        }
+
+        // Latest 5 only
+        const latest = notifications.slice(0, 5);
+
+        latest.forEach(notification => {
+
+            let icon = "🔔";
+
+            if (
+                notification.title
+                    .toLowerCase()
+                    .includes("appointment")
+            ) {
+
+                icon = "📅";
+
+            }
+
+            else if (
+                notification.title
+                    .toLowerCase()
+                    .includes("prescription")
+            ) {
+
+                icon = "💊";
+
+            }
+
+            const item =
+                document.createElement("li");
+
+            item.className =
+                "dropdown-item";
+
+            item.style.cursor =
+                "pointer";
+
+            item.innerHTML = `
+
+                <div class="d-flex">
+
+                    ${
+                        !notification.is_read
+                            ? '<span class="text-primary me-2">●</span>'
+                            : ""
+                    }
+
+                    <div>
+
+                        <strong>
+
+                            ${icon}
+                            ${notification.title}
+
+                        </strong>
+
+                        <br>
+
+                        <small class="text-muted d-block">
+
+                        ${notification.message}
+
+                    </small>
+
+                    <small class="text-secondary">
+
+                        ${getRelativeTime(notification.created_at)}
+
+                    </small>
+
+                    </div>
+
+                </div>
+
+            `;
+
+            item.addEventListener(
+                "click",
+                async () => {
+
+                    await markNotificationRead(
+                        notification.id
+                    );
+
+                }
+            );
+
+            list.appendChild(item);
+
+        });
+
     }
 
-    notifications.forEach(notification => {
+    catch (err) {
 
-    const style = notification.is_read ? "" : "fw-bold";
-    // 🔥 ADD THIS (toast for unread notifications)
-    if (!notification.is_read && !shownNotifications.has(notification.id)) {
-        console.log("toast triggered", notification);
-    showToast(`${notification.title}: ${notification.message}`);
-    shownNotifications.add(notification.id);
+        console.error(err);
+
+        showToast(
+            "Unable to load notifications.",
+            "error"
+        );
+
     }
-    
 
-    list.innerHTML += `
-        <li class="dropdown-item ${style}"
-            onclick="markNotificationRead(${notification.id})"
-            style="cursor:pointer">
-
-            <strong>${notification.title}</strong><br>
-            <small>${notification.message}</small>
-
-        </li>
-    `;
-  });
 }
+
+
+/* =========================================
+        MARK AS READ
+========================================= */
+
 async function markNotificationRead(id) {
 
-    const res = await authFetch(`${BASE_URL}/api/notifications/${id}/read/`, {
-        method: "POST"
-    });
+    try {
 
-    if (!res.ok) {
-        showToast("Failed to mark notification as read", "error");
-        return;
+        const res = await authFetch(
+
+            `${BASE_URL}/api/notifications/${id}/read/`,
+
+            {
+                method: "POST"
+            }
+
+        );
+
+        const data = await safeJson(res);
+
+        if (!res.ok) {
+
+            showToast(
+                data?.error ||
+                "Unable to mark notification.",
+                "error"
+            );
+
+            return;
+
+        }
+
+        await loadNotifications();
+
+        if (
+            typeof loadDashboard ===
+            "function"
+        ) {
+
+            await loadDashboard();
+
+        }
+
     }
 
-    loadNotifications(); // Notification list refresh
+    catch (err) {
+
+        console.error(err);
+
+        showToast(
+            "Server Error",
+            "error"
+        );
+
+    }
+
 }
 
-function showToast(message) {
-    const toast = document.createElement("div");
-    toast.className = "toast";
-    toast.innerText = message;
+async function markAllNotificationsRead() {
 
-    document.body.appendChild(toast);
+    try {
 
-    setTimeout(() => {
-        toast.classList.add("hide");
-        setTimeout(() => toast.remove(), 300);
-    }, 4000);
+        const res = await authFetch(
+
+            `${BASE_URL}/api/notifications/mark-all-read/`,
+
+            {
+                method: "POST"
+            }
+
+        );
+
+        if (!res.ok) return;
+
+        await loadNotifications();
+
+        if (typeof loadDashboard === "function") {
+
+            await loadDashboard();
+
+        }
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+    }
+
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const bell =
+        document.getElementById("notificationBell");
+
+    if (!bell) return;
+
+    bell.addEventListener("click", () => {
+
+        markAllNotificationsRead();
+
+    });
+
+});
+function getRelativeTime(dateString) {
+
+    const now = new Date();
+    const created = new Date(dateString);
+
+    const diff = Math.floor((now - created) / 1000);
+
+    if (diff < 60) {
+        return "Just now";
+    }
+
+    if (diff < 3600) {
+        const minutes = Math.floor(diff / 60);
+        return `${minutes} min ago`;
+    }
+
+    if (diff < 86400) {
+        const hours = Math.floor(diff / 3600);
+        return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    }
+
+    if (diff < 172800) {
+        return "Yesterday";
+    }
+
+    const days = Math.floor(diff / 86400);
+
+    return `${days} days ago`;
+
 }
