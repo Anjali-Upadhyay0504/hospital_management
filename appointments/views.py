@@ -10,13 +10,38 @@ from .models import Appointment
 from .serializers import AppointmentSerializer
 from schedule.models import DoctorSchedule
 from doctor.models import DoctorProfile
-
+from .pagination import StandardPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
 class AppointmentViewSet(viewsets.ModelViewSet):
 
     serializer_class = AppointmentSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardPagination
 
+    filter_backends = [
+    DjangoFilterBackend,
+    filters.SearchFilter,
+    filters.OrderingFilter,
+        ]
+
+    filterset_fields = [
+        "status",
+    ]
+
+    search_fields = [
+        "doctor__user__username",
+    ]
+
+    ordering_fields = [
+        "appointment_date",
+        "created_at",
+    ]
+
+    ordering = [
+        "-appointment_date",
+    ]
     # =========================
     # GET APPOINTMENTS (FILTERED)
     # =========================
@@ -201,3 +226,16 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             message=f"{appointment.patient.username} cancelled the appointment."
         )
         return Response({"message": "Cancelled"})
+    
+    @action(detail=False, methods=["get"])
+    def recent(self, request):
+
+        user = request.user
+
+        appointments = Appointment.objects.filter(
+            patient=user
+        ).order_by("-appointment_date")[:5]
+
+        serializer = self.get_serializer(appointments, many=True)
+
+        return Response(serializer.data)

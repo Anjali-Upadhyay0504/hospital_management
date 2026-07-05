@@ -216,7 +216,7 @@ async function rejectRequest(id) {
             showToast(data?.message || "Request rejected", "warning");
 
             loadDoctorRequests();
-            loadStats();
+            loadAdminDashboard();
 
         } else {
 

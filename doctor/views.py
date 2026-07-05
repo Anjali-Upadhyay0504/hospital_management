@@ -121,6 +121,33 @@ class DoctorViewSet(viewsets.ModelViewSet):
                 message=f"{request.user.username} submitted a doctor request."
             )
         return Response(serializer.data, status=201)
+    
+
+    # =========================
+# MY DOCTOR REQUEST
+# =========================
+
+    @action(detail=False, methods=["get"])
+    def my_request(self, request):
+        
+        if request.user.role != "patient":
+            return Response(
+                {"error": "Only patients can access this"},
+                status=403
+            )
+
+        doctor_request = DoctorRequest.objects.filter(
+            user=request.user
+        ).first()
+
+        if not doctor_request:
+            return Response({
+                "status": "not_submitted"
+            })
+
+        serializer = DoctorRequestSerializer(doctor_request)
+
+        return Response(serializer.data)
       # =========================
     # 🔥 REQUEST PENDING
     # =========================

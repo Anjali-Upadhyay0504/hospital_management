@@ -5,8 +5,16 @@ from schedule.models import DoctorSchedule
 
 class AppointmentSerializer(serializers.ModelSerializer):
 
+    # =========================
+    # READABLE FIELDS
+    # =========================
     doctor_name = serializers.CharField(
         source="doctor.user.username",
+        read_only=True
+    )
+
+    doctor_specialization = serializers.CharField(
+        source="doctor.specialization",
         read_only=True
     )
 
@@ -15,23 +23,27 @@ class AppointmentSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
-    # Prescription ID
     prescription_id = serializers.SerializerMethodField()
 
+    # =========================
     class Meta:
         model = Appointment
+
         fields = [
             "id",
             "patient",
             "patient_name",
             "doctor",
             "doctor_name",
+            "doctor_specialization",
             "appointment_date",
             "duration",
             "reason",
+            "symptoms",
+            "doctor_notes",
             "status",
             "prescription_id",
-            "created_at"
+            "created_at",
         ]
 
         read_only_fields = (
@@ -40,11 +52,12 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "created_at",
             "patient_name",
             "doctor_name",
+            "doctor_specialization",
             "prescription_id",
         )
 
     # =========================
-    # GET PRESCRIPTION ID
+    # PRESCRIPTION
     # =========================
     def get_prescription_id(self, obj):
         if hasattr(obj, "prescription"):
@@ -66,10 +79,9 @@ class AppointmentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Appointment date is required")
 
         appointment_time = appointment_datetime.time()
-
         day = appointment_datetime.strftime("%a").lower()
 
-        # Duplicate check
+        # Duplicate appointment check
         if Appointment.objects.filter(
             doctor=doctor,
             appointment_date=appointment_datetime,
@@ -90,12 +102,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
                 "Doctor has no schedule for this day"
             )
 
-        allowed = False
-
-        for schedule in schedules:
-            if schedule.start_time <= appointment_time < schedule.end_time:
-                allowed = True
-                break
+        allowed = any(
+            schedule.start_time <= appointment_time < schedule.end_time
+            for schedule in schedules
+        )
 
         if not allowed:
             raise serializers.ValidationError(

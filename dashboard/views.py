@@ -94,6 +94,16 @@ class DoctorDashboardAPIView(APIView):
             )
         
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+from accounts.models import User
+from appointments.models import Appointment
+from prescriptions.models import Prescription
+from notifications.models import Notification
+
+
 class PatientDashboardAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
@@ -105,11 +115,20 @@ class PatientDashboardAPIView(APIView):
 
         patient = request.user
 
+        # =========================
+        # BASE QUERIES (OPTIMIZED)
+        # =========================
+        appointment_qs = Appointment.objects.filter(patient=patient)
+
+        # =========================
+        # RESPONSE
+        # =========================
         data = {
+
+            # 🔵 EXISTING COUNTS (NO BREAK)
             "doctor_count": User.objects.filter(role="doctor").count(),
 
-            "appointment_count": Appointment.objects.filter(
-                patient=patient,
+            "appointment_count": appointment_qs.filter(
                 status__in=["pending", "approved"]
             ).count(),
 
@@ -121,6 +140,52 @@ class PatientDashboardAPIView(APIView):
                 receiver=patient,
                 is_read=False
             ).count(),
+
+            # =========================
+            # 🟢 NEW SAFE ADDITIONS
+            # (won't break frontend if ignored)
+            # =========================
+
+            "recent_appointments": list(
+                appointment_qs.select_related("doctor")
+                .order_by("-appointment_date")[:5]
+                .values(
+                    "id",
+                    "status",
+                    "appointment_date",
+                    "doctor__user__username",
+                    "doctor__specialization"
+                )
+            ),
+
+            "next_appointment": (
+                appointment_qs.filter(
+                    status__in=["pending", "approved"]
+                )
+                .order_by("appointment_date")
+                .values(
+                    "id",
+                    "status",
+                    "appointment_date",
+                    "doctor__user__username"
+                )
+                .first()
+            ),
+            "latest_prescriptions": list(
+            Prescription.objects.filter(
+                appointment__patient=patient
+            )
+            .select_related(
+                "appointment__doctor__user"
+            )
+            .order_by("-created_at")[:3]
+            .values(
+                "id",
+                "diagnosis",
+                "created_at",
+                "appointment__doctor__user__username"
+            )
+        ),
         }
 
         return Response(data)

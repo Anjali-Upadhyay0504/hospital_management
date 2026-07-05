@@ -14,7 +14,18 @@ urlpatterns = [
     # =========================
     path('', TemplateView.as_view(template_name='signup.html')),
     path('login/', TemplateView.as_view(template_name='login.html')),
-
+    path(
+    'request-doctor/',
+    TemplateView.as_view(
+        template_name='request-doctor.html'
+    ),
+),
+    path(
+    'patient/appointments/',
+    TemplateView.as_view(
+        template_name='patient-appointments.html'
+    )
+),
     path('doctor-dashboard/', TemplateView.as_view(template_name='doctor-dashboard.html')),
     path('patient-dashboard/', TemplateView.as_view(template_name='patient-dashboard.html')),
     path('admin-dashboard/', TemplateView.as_view(template_name='admin-dashboard.html')),

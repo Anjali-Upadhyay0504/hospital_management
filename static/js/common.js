@@ -65,8 +65,9 @@ function showToast(message, type = "info") {
 
     toast.innerText = message;
     toast.style.position = "fixed";
-    toast.style.bottom = "20px";
-    toast.style.right = "20px";
+    toast.style.top = "20px";
+    toast.style.left = "50%";
+    toast.style.transform = "translateX(-50%)";
     toast.style.background = color;
     toast.style.color = "#fff";
     toast.style.padding = "10px 15px";

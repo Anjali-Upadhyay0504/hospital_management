@@ -136,11 +136,13 @@
                     <li>
 
                         <a class="dropdown-item"
-                           href="#">
+                          href="/request-doctor/">
 
-                            Settings
+                        <i class="bi bi-person-badge me-2"></i>
 
-                        </a>
+                        Request to Become Doctor
+
+                     </a>
 
                     </li>
 
@@ -411,86 +413,37 @@ Book Appointment
 </div>
 
 </div>
-    <!-- ==========================
-      APPOINTMENT HISTORY
-========================== -->
+<!-- Recent Appointments -->
 
-<div class="row justify-content-center">
+<div class="card shadow border-0 mb-4">
 
-    <div class="col-lg-8">
+    <div class="card-header bg-success d-flex justify-content-between">
 
-        <div class="card shadow border-0 mb-4">
+        <h5 class="mb-0">
+            Recent Appointments
+        </h5>
 
-            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <a href="/patient/appointments/"
+           class="btn btn-light btn-sm">
 
-                <h5 class="mb-0">
-                    <i class="bi bi-calendar-check"></i>
-                    My Appointments
-                </h5>
+            View All
 
-                <button class="btn btn-light btn-sm"
-                        onclick="loadAppointments()">
+        </a>
 
-                    <i class="bi bi-arrow-clockwise"></i>
+    </div>
 
-                </button>
+    <div class="card-body">
 
-            </div>
+        <div id="recentAppointments">
 
-            <div class="card-body">
-
-                <div class="table-responsive">
-
-                    <table class="table table-hover align-middle">
-
-                        <thead class="table-primary">
-
-                        <tr>
-
-                            <th>#</th>
-
-                            <th>Doctor</th>
-
-                            <th>Date</th>
-
-                            <th>Status</th>
-
-                            <th>Action</th>
-
-                        </tr>
-
-                        </thead>
-
-                        <tbody id="appointmentTable">
-
-                            <tr>
-
-                                <td colspan="5"
-                                    class="text-center text-muted py-5">
-
-                                    <i class="bi bi-calendar-x fs-1"></i>
-
-                                    <br><br>
-
-                                    No appointments found
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
+            Loading...
 
         </div>
 
-        
-        
-        
+    </div>
+
+</div>
+    
         <!-- ==========================
             UPCOMING APPOINTMENT
             ========================== -->
@@ -511,11 +464,15 @@ Book Appointment
                     
                     <i class="bi bi-calendar-heart fs-1 text-info"></i>
                     
-                    <h5 class="mt-3">
-                        
-                        No Upcoming Appointment
-                        
-                    </h5>
+                    <div class="card-body">
+
+                    <div id="nextAppointment">
+
+                        Loading...
+
+                    </div>
+
+                </div>
                     
                     <p class="text-muted">
                         
@@ -548,29 +505,32 @@ Book Appointment
 
 </div>
 
-<div class="card-body">
+<<div class="card shadow border-0 mb-4">
 
-<div class="row"
+    <div class="card-header bg-danger d-flex justify-content-between">
 
-id="prescriptionTable">
+        <h5 class="mb-0">
+            Latest Prescriptions
+        </h5>
 
-<div class="col-12">
+        <a href="/patient/prescriptions/"
+           class="btn btn-light btn-sm">
 
-<div class="text-center text-muted py-5">
+            View All
 
-<i class="bi bi-file-earmark-medical fs-1"></i>
+        </a>
 
-<br><br>
+    </div>
 
-No Prescriptions Available
+    <div class="card-body">
 
-</div>
+        <div id="latestPrescription">
 
-</div>
+            Loading...
 
-</div>
+        </div>
 
-</div>
+    </div>
 
 </div>
 
