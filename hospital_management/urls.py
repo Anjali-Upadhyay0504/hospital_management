@@ -38,7 +38,36 @@ urlpatterns = [
         )
     ),
 
+    
+ # =========================
+    # DOCTOR PAGES
+    # =========================
+
    
+
+    path(
+        "doctor/appointments/",
+        TemplateView.as_view(template_name="doctor-appointment.html"),
+        name="doctor-appointments",
+    ),
+
+    path(
+        "doctor/schedule/",
+        TemplateView.as_view(template_name="doctor-schedule.html"),
+        name="doctor-schedule",
+    ),
+
+    path(
+        "doctor/prescriptions/",
+        TemplateView.as_view(template_name="doctor-prescription.html"),
+        name="doctor-prescriptions",
+    ),
+
+
+
+
+
+
     # =========================
     # ADMIN PANEL
     # =========================

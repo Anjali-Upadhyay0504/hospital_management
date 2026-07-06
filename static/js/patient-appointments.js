@@ -1,105 +1,73 @@
-/* =========================================
-        LOAD APPOINTMENTS (PAGINATED)
-========================================= */
+let currentPage = 1;
+let currentSearch = "";
 
 /* =========================================
-        LOAD APPOINTMENTS (PAGINATED + FILTER)
+        LOAD APPOINTMENTS
 ========================================= */
 
 async function loadAppointments(page = 1) {
 
+    currentPage = page;
+
+    const search = getE1("searchInput")?.value.trim() || "";
+
+    let url = `${BASE_URL}/api/appointments/?page=${page}`;
+
+    if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+    }
+
     try {
 
-        // Search & Filter values
-        const search = getE1("searchInput")?.value.trim() || "";
-        const status = getE1("statusFilter")?.value || "";
-
-        // Build URL
-        let url = `${BASE_URL}/api/appointments/?page=${page}`;
-
-        if (search) {
-            url += `&search=${encodeURIComponent(search)}`;
-        }
-
-        if (status) {
-            url += `&status=${encodeURIComponent(status)}`;
-        }
-
         const res = await authFetch(url);
-
         const data = await safeJson(res);
 
         if (!res.ok) {
-            showToast(
-                data?.detail ||
-                data?.error ||
-                "Failed to load appointments",
-                "error"
-            );
+            showToast("Failed to load", "error");
             return;
         }
 
-        const appointments = data.results || [];
-
-        renderAppointments(appointments);
+        renderAppointments(data.results || []);
         renderPagination(data);
 
     } catch (err) {
-
         console.error(err);
-
-        showToast(
-            "Server error while loading appointments",
-            "error"
-        );
     }
 }
 
+
 /* =========================================
-        RENDER APPOINTMENTS TABLE
+        RENDER TABLE
 ========================================= */
 
-function renderAppointments(appointments) {
+function renderAppointments(list) {
 
     const table = getE1("appointmentTable");
     table.innerHTML = "";
 
-    if (!appointments.length) {
+    if (!list.length) {
         table.innerHTML = `
             <tr>
-                <td colspan="5" class="text-center py-4 text-muted">
-                    No appointments found
-                </td>
+                <td colspan="5" class="text-center">No Data</td>
             </tr>
         `;
         return;
     }
 
-    appointments.forEach(a => {
-
-        let badge = "bg-secondary";
-
-        if (a.status === "pending") badge = "bg-warning text-dark";
-        if (a.status === "approved") badge = "bg-primary";
-        if (a.status === "completed") badge = "bg-success";
-        if (a.status === "cancelled") badge = "bg-danger";
+    list.forEach(a => {
 
         let actions = "";
 
-        if (a.status !== "cancelled" && a.status !== "completed") {
-            actions += `
-                <button class="btn btn-sm btn-danger"
-                    onclick="cancelAppointment(${a.id})">
-                    Cancel
+        if (a.status === "pending") {
+            actions = `
+                <button class="btn btn-success btn-sm"
+                    onclick="updateStatus(${a.id}, 'approved')">
+                    Approve
                 </button>
-            `;
-        }
 
-        if (a.status === "completed" && a.prescription_id) {
-            actions += `
-                <button class="btn btn-sm btn-success"
-                    onclick="viewPrescription(${a.prescription_id})">
-                    View
+                <button class="btn btn-danger btn-sm"
+                    onclick="updateStatus(${a.id}, 'rejected')">
+                    Reject
                 </button>
             `;
         }
@@ -107,13 +75,11 @@ function renderAppointments(appointments) {
         table.innerHTML += `
             <tr>
                 <td>${a.id}</td>
-                <td>${a.doctor_name}</td>
-                <td>${a.doctor_specialization}</td>
+                <td>${a.patient_name}</td>
                 <td>${formatDate(a.appointment_date)}</td>
+                <td>${a.specialization}</td>
                 <td>
-                    <span class="badge ${badge}">
-                        ${a.status}
-                    </span>
+                    <span class="badge bg-primary">${a.status}</span>
                 </td>
                 <td>${actions || "-"}</td>
             </tr>
@@ -123,7 +89,7 @@ function renderAppointments(appointments) {
 
 
 /* =========================================
-        PAGINATION UI
+        PAGINATION (SAME PATIENT STYLE)
 ========================================= */
 
 function renderPagination(data) {
@@ -139,7 +105,8 @@ function renderPagination(data) {
     for (let i = 1; i <= totalPages; i++) {
 
         html += `
-            <button class="btn btn-sm btn-outline-primary m-1"
+            <button class="btn btn-sm btn-outline-primary m-1
+                ${i === currentPage ? 'active' : ''}"
                 onclick="loadAppointments(${i})">
                 ${i}
             </button>
@@ -150,6 +117,10 @@ function renderPagination(data) {
 }
 
 
+/* INIT */
+document.addEventListener("DOMContentLoaded", () => {
+    loadAppointments(1);
+});
 /* =========================================
         CANCEL APPOINTMENT
 ========================================= */

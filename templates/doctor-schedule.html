@@ -1,0 +1,37 @@
+{% extends "base_doctor.html" %}
+{% load static %}
+{% block content %}
+
+<h3>Schedule 🗓</h3>
+
+<div class="card-box mb-3">
+
+    <input id="scheduleDay" class="form-control mb-2" placeholder="Day">
+
+    <input id="startTime" type="time" class="form-control mb-2">
+
+    <input id="endTime" type="time" class="form-control mb-2">
+
+    <button class="btn btn-success" onclick="addSchedule()">
+        Add Schedule
+    </button>
+
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Day</th>
+            <th>Start</th>
+            <th>End</th>
+        </tr>
+    </thead>
+
+    <tbody id="scheduleTable">
+        <tr><td colspan="3">Loading...</td></tr>
+    </tbody>
+</table>
+
+<script src="{% static 'js/doctor-schedule.js' %}"></script>
+
+{% endblock %}

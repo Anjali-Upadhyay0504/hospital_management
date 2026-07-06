@@ -298,16 +298,27 @@ async function markAllNotificationsRead() {
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    const bell =
-        document.getElementById("notificationBell");
+    const bell = document.getElementById("notificationBell");
 
-    if (!bell) return;
+    if (bell) {
 
-    bell.addEventListener("click", () => {
+        bell.addEventListener("click", () => {
 
-        markAllNotificationsRead();
+            markAllNotificationsRead();
 
-    });
+        });
+
+    }
+
+    // Load notifications immediately
+    loadNotifications();
+
+    // Auto refresh every 10 seconds
+    setInterval(() => {
+
+        loadNotifications();
+
+    }, 10000);
 
 });
 function getRelativeTime(dateString) {

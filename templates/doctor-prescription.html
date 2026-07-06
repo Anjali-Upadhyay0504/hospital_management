@@ -1,0 +1,39 @@
+{% extends "base_doctor.html" %}
+{% load static %}
+{% block content %}
+
+<h3>Prescriptions 💊</h3>
+
+<select id="appointmentSelect" class="form-control mb-2"></select>
+
+<input id="diagnosis" class="form-control mb-2" placeholder="Diagnosis">
+<input id="medicines" class="form-control mb-2" placeholder="Medicines">
+<input id="notes" class="form-control mb-2" placeholder="Notes">
+
+<button class="btn btn-primary" onclick="savePrescription()">
+    Save Prescription
+</button>
+
+<hr>
+
+<table class="table table-bordered mt-3">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Patient</th>
+            <th>Doctor</th>
+            <th>Diagnosis</th>
+            <th>Medicines</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody id="prescriptionTable">
+        <tr><td colspan="7">Loading...</td></tr>
+    </tbody>
+</table>
+
+<script src="{% static 'js/doctor-prescription.js' %}"></script>
+
+{% endblock %}

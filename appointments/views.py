@@ -21,17 +21,13 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     pagination_class = StandardPagination
 
     filter_backends = [
-    DjangoFilterBackend,
-    filters.SearchFilter,
-    filters.OrderingFilter,
-        ]
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
 
     filterset_fields = [
         "status",
-    ]
-
-    search_fields = [
-        "doctor__user__username",
     ]
 
     ordering_fields = [
@@ -42,26 +38,48 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     ordering = [
         "-appointment_date",
     ]
-    # =========================
-    # GET APPOINTMENTS (FILTERED)
-    # =========================
+
+    # =========================================
+    # ROLE BASED SEARCH
+    # =========================================
+    search_fields = [
+    "patient__username",
+    "patient__first_name",
+    "patient__last_name",
+    "doctor__user__username",
+    "doctor__user__first_name",
+    "doctor__user__last_name",
+    "reason",
+]
+
+    # =========================================
+    # GET APPOINTMENTS
+    # =========================================
     def get_queryset(self):
+        print("SEARCH =", self.request.query_params.get("search"))
         user = self.request.user
 
         if user.role == "doctor":
 
             try:
                 doctor = DoctorProfile.objects.get(user=user)
+
             except DoctorProfile.DoesNotExist:
                 return Appointment.objects.none()
 
-            queryset = Appointment.objects.filter(doctor=doctor)
-
+            queryset = Appointment.objects.filter(
+                doctor=doctor
+            )
             view_type = self.request.query_params.get("view")
+            print("SEARCH =", self.request.query_params.get("search"))
+            print("PATIENTS =", list(queryset.values_list("patient__username", flat=True)))
+
             today = date.today()
 
             if view_type == "today":
-                queryset = queryset.filter(appointment_date__date=today)
+                queryset = queryset.filter(
+                    appointment_date__date=today
+                )
 
             elif view_type == "pending":
                 queryset = queryset.filter(status="pending")
@@ -78,6 +96,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             return Appointment.objects.filter(patient=user)
 
         return Appointment.objects.all()
+   
 
     # =========================
     # CREATE APPOINTMENT
