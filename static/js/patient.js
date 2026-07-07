@@ -233,6 +233,68 @@ async function initializeDoctorSelect() {
 });
 
 }
+async function loadLatestPrescriptions() {
+
+    try {
+
+        const response = await authFetch(`${BASE_URL}/api/prescriptions/`);
+
+        const data = await safeJson(response);
+
+        if (!response.ok) {
+
+            document.getElementById("latestPrescription").innerHTML =
+                `<p class="text-danger">Unable to load prescriptions.</p>`;
+
+            return;
+        }
+
+        const prescriptions = data.results || data;
+
+        document.getElementById("prescriptionCount").innerText =
+            prescriptions.length;
+
+        if (prescriptions.length === 0) {
+
+            document.getElementById("latestPrescription").innerHTML =
+                `<p class="text-muted">No prescriptions found.</p>`;
+
+            return;
+        }
+
+        document.getElementById("latestPrescription").innerHTML =
+            prescriptions
+                .slice(0, 5)
+                .map(p => `
+                    <div class="card mb-2 shadow-sm">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+
+                            <div>
+                                <h6 class="mb-1">Dr. ${p.doctor_name}</h6>
+                                <small class="text-muted">
+                                    ${formatDate(p.created_at)}
+                                </small>
+                            </div>
+
+                            <button class="btn btn-primary btn-sm"
+                                    onclick="viewPrescription(${p.id})">
+                                View
+                            </button>
+
+                        </div>
+                    </div>
+                `).join("");
+
+    } catch (err) {
+
+        console.error(err);
+
+        document.getElementById("latestPrescription").innerHTML =
+            `<p class="text-danger">Network Error</p>`;
+
+    }
+
+}
 /* =========================================
         INIT
 ========================================= */
@@ -241,6 +303,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     await protectPage("patient");
 
     loadDashboard();
+    loadLatestPrescriptions();
     initializeDoctorSelect();
     loadNotifications();
     getE1("doctorSelect").addEventListener("change", loadAvailableSlots);

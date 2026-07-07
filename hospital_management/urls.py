@@ -66,6 +66,11 @@ urlpatterns = [
 
 
 
+    path(
+        "patient/prescriptions/",
+        TemplateView.as_view(template_name="patient-prescription.html"),
+        name="patient-prescriptions",
+    ),
 
 
     # =========================

@@ -59,7 +59,9 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
 
         appointment = serializer.validated_data["appointment"]
-
+        print("Logged User :", self.request.user.username)
+        print("Appointment Doctor :", appointment.doctor.user.username)
+        print("Appointment Status :", appointment.status)
         if appointment.doctor.user != self.request.user:
             raise PermissionDenied()
 

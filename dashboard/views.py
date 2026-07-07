@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from django.utils import timezone
 # Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -67,8 +67,9 @@ class DoctorDashboardAPIView(APIView):
         try:
 
             doctor = DoctorProfile.objects.get(user=request.user)
-
             data = {
+                "doctor_name": f"Dr. {request.user.get_full_name() or request.user.username}",
+
                 "total_appointments":
                     Appointment.objects.filter(doctor=doctor).count(),
 
@@ -94,14 +95,7 @@ class DoctorDashboardAPIView(APIView):
             )
         
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 
-from accounts.models import User
-from appointments.models import Appointment
-from prescriptions.models import Prescription
-from notifications.models import Notification
 
 
 class PatientDashboardAPIView(APIView):
@@ -160,6 +154,7 @@ class PatientDashboardAPIView(APIView):
 
             "next_appointment": (
                 appointment_qs.filter(
+                    appointment_date__gte=timezone.now(),
                     status__in=["pending", "approved"]
                 )
                 .order_by("appointment_date")

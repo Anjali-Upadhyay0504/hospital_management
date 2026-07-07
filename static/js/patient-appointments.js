@@ -75,9 +75,9 @@ function renderAppointments(list) {
         table.innerHTML += `
             <tr>
                 <td>${a.id}</td>
-                <td>${a.patient_name}</td>
+                <td>${a.doctor_name}</td>
+                <td>${a.doctor_specialization}</td>
                 <td>${formatDate(a.appointment_date)}</td>
-                <td>${a.specialization}</td>
                 <td>
                     <span class="badge bg-primary">${a.status}</span>
                 </td>

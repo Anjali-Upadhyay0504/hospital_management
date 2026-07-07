@@ -1,0 +1,765 @@
+/* ===========================
+   Google Font
+=========================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* ===========================
+   Global
+=========================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:#F4F7FC;
+    color:#1E293B;
+}
+
+/* ===========================
+   Sidebar
+=========================== */
+
+.sidebar{
+
+    width:260px;
+
+    height:100vh;
+
+    background:#0F172A;
+
+    position:fixed;
+
+    left:0;
+
+    top:0;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:space-between;
+
+    box-shadow:5px 0 25px rgba(0,0,0,.08);
+
+    z-index:1000;
+
+}
+
+/* Logo */
+
+.logo{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    padding:28px 20px;
+
+    border-bottom:1px solid rgba(255,255,255,.08);
+
+}
+
+.logo-icon{
+
+    width:55px;
+
+    height:55px;
+
+    border-radius:15px;
+
+    background:linear-gradient(135deg,#2563EB,#14B8A6);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    color:#fff;
+
+    font-size:24px;
+
+}
+
+.logo h4{
+
+    color:#fff;
+
+    margin:0;
+
+    font-size:20px;
+
+    font-weight:600;
+
+}
+
+.logo small{
+
+    color:#CBD5E1;
+
+}
+
+/* Menu */
+
+.menu{
+
+    padding:20px 15px;
+
+    flex:1;
+
+}
+
+.menu-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    color:#CBD5E1;
+
+    text-decoration:none;
+
+    padding:15px 18px;
+
+    border-radius:12px;
+
+    margin-bottom:10px;
+
+    transition:.3s;
+
+    font-size:15px;
+
+    font-weight:500;
+
+}
+
+.menu-item i{
+
+    font-size:20px;
+
+}
+
+.menu-item:hover{
+
+    background:#2563EB;
+
+    color:white;
+
+    transform:translateX(5px);
+
+}
+
+.menu-item.active{
+
+    background:#2563EB;
+
+    color:white;
+
+}
+
+/* Logout */
+
+.sidebar-footer{
+
+    padding:20px;
+
+    border-top:1px solid rgba(255,255,255,.08);
+
+}
+
+.logout-btn{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    color:#FFB4B4;
+
+    text-decoration:none;
+
+    padding:14px;
+
+    border-radius:12px;
+
+    transition:.3s;
+
+}
+
+.logout-btn:hover{
+
+    background:#DC2626;
+
+    color:white;
+
+}
+
+/* ===========================
+   Main Content
+=========================== */
+
+.main-content{
+
+    margin-left:260px;
+
+    min-height:100vh;
+
+}
+
+/* ===========================
+   Topbar
+=========================== */
+
+.topbar{
+
+    height:80px;
+
+    background:white;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:0 35px;
+
+    box-shadow:0 2px 15px rgba(0,0,0,.05);
+
+    position:sticky;
+
+    top:0;
+
+    z-index:999;
+
+}
+
+.page-title{
+
+    margin:0;
+
+    font-weight:600;
+
+    color:#0F172A;
+
+}
+
+/* ===========================
+   Notification
+=========================== */
+
+.notification-btn{
+
+    width:55px;
+
+    height:55px;
+
+    border-radius:50%;
+
+    background:#EFF6FF;
+
+    border:none;
+
+    font-size:22px;
+
+    color:#2563EB;
+
+    transition:.3s;
+
+}
+
+.notification-btn:hover{
+
+    background:#2563EB;
+
+    color:white;
+
+}
+
+#notificationCount{
+
+    position:absolute;
+
+    top:5px;
+
+    right:3px;
+
+    font-size:11px;
+
+}
+
+.notification-dropdown{
+
+    width:360px;
+
+    border:none;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+}
+
+.notification-dropdown .dropdown-header{
+
+    padding:18px;
+
+}
+
+/* Notification Items */
+
+.notification-item{
+
+    padding:15px 18px;
+
+    border-bottom:1px solid #F1F5F9;
+
+    transition:.3s;
+
+    cursor:pointer;
+
+}
+
+.notification-item:hover{
+
+    background:#F8FAFC;
+
+}
+
+/* ===========================
+   Page Content
+=========================== */
+
+.page-content{
+
+    padding:30px;
+
+}
+
+/* ===========================
+   Cards
+=========================== */
+
+.card{
+
+    border:none;
+
+    border-radius:18px;
+
+    box-shadow:0 5px 20px rgba(15,23,42,.06);
+
+}
+
+.card-header{
+
+    background:white;
+
+    border:none;
+
+    padding:18px 22px;
+
+    font-weight:600;
+
+}
+
+.card-body{
+
+    padding:22px;
+
+}
+
+/* ===========================
+   Table
+=========================== */
+
+.table{
+
+    margin-bottom:0;
+
+}
+
+.table thead{
+
+    background:#EFF6FF;
+
+}
+
+.table th{
+
+    color:#2563EB;
+
+    border:none;
+
+    font-weight:600;
+
+}
+
+.table td{
+
+    vertical-align:middle;
+
+}
+
+/* ===========================
+   Buttons
+=========================== */
+
+.btn-primary{
+
+    background:#2563EB;
+
+    border:none;
+
+}
+
+.btn-primary:hover{
+
+    background:#1D4ED8;
+
+}
+
+/* ===========================
+   Inputs
+=========================== */
+
+.form-control,
+.form-select{
+
+    border-radius:10px;
+
+    min-height:45px;
+
+}
+
+.form-control:focus,
+.form-select:focus{
+
+    border-color:#2563EB;
+
+    box-shadow:0 0 0 .2rem rgba(37,99,235,.15);
+
+}
+
+/* ===========================
+   Badges
+=========================== */
+
+.badge{
+
+    font-size:12px;
+
+    padding:8px 12px;
+
+}
+
+/* ===========================
+   Scrollbar
+=========================== */
+
+::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#CBD5E1;
+
+    border-radius:20px;
+
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media(max-width:992px){
+
+.sidebar{
+
+    width:85px;
+
+}
+
+.logo h4,
+.logo small,
+.menu-item span,
+.logout-btn span{
+
+    display:none;
+
+}
+
+.logo{
+
+    justify-content:center;
+
+}
+
+.menu-item{
+
+    justify-content:center;
+
+}
+
+.logout-btn{
+
+    justify-content:center;
+
+}
+
+.main-content{
+
+    margin-left:85px;
+
+}
+
+}
+
+@media(max-width:768px){
+
+.topbar{
+
+    padding:15px;
+
+}
+
+.notification-dropdown{
+
+    width:300px;
+
+}
+
+.page-content{
+
+    padding:18px;
+
+}
+
+}
+/* ===========================
+   Dashboard
+=========================== */
+
+.welcome-banner{
+
+    background:linear-gradient(135deg,#2563EB,#14B8A6);
+
+    color:white;
+
+    padding:35px;
+
+    border-radius:20px;
+
+    box-shadow:0 15px 35px rgba(37,99,235,.18);
+
+}
+
+.banner-icon{
+
+    font-size:90px;
+
+    opacity:.25;
+
+}
+
+.dashboard-card{
+
+    color:white;
+
+    border-radius:18px;
+
+    padding:30px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    transition:.3s;
+
+    min-height:170px;
+
+}
+
+.dashboard-card:hover{
+
+    transform:translateY(-6px);
+
+}
+
+.dashboard-card h6{
+
+    opacity:.9;
+
+    margin-bottom:12px;
+
+}
+
+.dashboard-card h2{
+
+    font-size:40px;
+
+    font-weight:700;
+
+}
+
+.dashboard-card i{
+
+    font-size:60px;
+
+    opacity:.25;
+
+}
+
+.total-card{
+
+    background:#2563EB;
+
+}
+
+.today-card{
+
+    background:#10B981;
+
+}
+
+.pending-card{
+
+    background:#F59E0B;
+
+}
+
+/* ===========================
+   Appointment Page
+=========================== */
+
+.input-group-text{
+
+    background:#2563EB;
+
+    color:white;
+
+    border:none;
+
+}
+
+.table thead{
+
+    background:#EFF6FF;
+
+}
+
+.table th{
+
+    padding:16px;
+
+    color:#2563EB;
+
+    font-weight:600;
+
+}
+
+.table td{
+
+    padding:16px;
+
+}
+
+.table tbody tr:hover{
+
+    background:#F8FAFC;
+
+}
+
+.badge{
+
+    border-radius:20px;
+
+    padding:8px 14px;
+
+    text-transform:capitalize;
+
+}
+
+#pagination .btn{
+
+    min-width:42px;
+
+    border-radius:10px;
+
+}
+/* ===========================
+   Schedule
+=========================== */
+
+.card-header i{
+
+    margin-right:8px;
+
+    color:#2563EB;
+
+}
+
+.form-label{
+
+    font-weight:500;
+
+}
+
+.table td,
+.table th{
+
+    padding:16px;
+
+}
+
+/* ===========================
+   Prescription
+=========================== */
+
+textarea.form-control{
+
+    resize:none;
+
+}
+
+.modal-content{
+
+    border:none;
+
+    border-radius:18px;
+
+}
+
+.modal-header{
+
+    background:#2563EB;
+
+    color:white;
+
+}
+
+.modal-header .btn-close{
+
+    filter:invert(1);
+
+}
+
+.table th{
+
+    white-space:nowrap;
+
+}

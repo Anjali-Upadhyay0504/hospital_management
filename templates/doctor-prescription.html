@@ -1,39 +1,282 @@
 {% extends "base_doctor.html" %}
 {% load static %}
+{% block title %}
+Prescriptions
+{% endblock %}
+
 {% block content %}
 
-<h3>Prescriptions 💊</h3>
+<div class="container-fluid">
 
-<select id="appointmentSelect" class="form-control mb-2"></select>
+    <!-- Page Header -->
 
-<input id="diagnosis" class="form-control mb-2" placeholder="Diagnosis">
-<input id="medicines" class="form-control mb-2" placeholder="Medicines">
-<input id="notes" class="form-control mb-2" placeholder="Notes">
+    <div class="mb-4">
 
-<button class="btn btn-primary" onclick="savePrescription()">
-    Save Prescription
-</button>
+        <h3 class="fw-bold">
+            Prescription Management
+        </h3>
 
-<hr>
+        <p class="text-muted">
+            Create and manage patient prescriptions.
+        </p>
 
-<table class="table table-bordered mt-3">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Patient</th>
-            <th>Doctor</th>
-            <th>Diagnosis</th>
-            <th>Medicines</th>
-            <th>Date</th>
-            <th>Action</th>
-        </tr>
-    </thead>
+    </div>
 
-    <tbody id="prescriptionTable">
-        <tr><td colspan="7">Loading...</td></tr>
-    </tbody>
-</table>
+    <div class="row">
 
-<script src="{% static 'js/doctor-prescription.js' %}"></script>
+        <!-- Left Form -->
+
+        <div class="col-lg-4 mb-4">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <i class="bi bi-file-earmark-medical"></i>
+
+                    New Prescription
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Appointment
+                        </label>
+
+                        <select
+                            id="appointmentSelect"
+                            class="form-select">
+
+                            <option>
+                                Loading...
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Diagnosis
+                        </label>
+
+                        <textarea
+                            id="diagnosis"
+                            rows="3"
+                            class="form-control"></textarea>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Medicines
+                        </label>
+
+                        <textarea
+                            id="medicines"
+                            rows="3"
+                            class="form-control"></textarea>
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+                            Notes
+                        </label>
+
+                        <textarea
+                            id="notes"
+                            rows="3"
+                            class="form-control"></textarea>
+
+                    </div>
+
+                    <button
+                        class="btn btn-primary w-100"
+                        onclick="savePrescription()">
+
+                        <i class="bi bi-floppy"></i>
+
+                        Save Prescription
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Prescription Table -->
+
+        <div class="col-lg-8">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <i class="bi bi-journal-medical"></i>
+
+                    Prescription History
+
+                </div>
+
+                <div class="card-body p-0">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover mb-0">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>ID</th>
+
+                                    <th>Patient</th>
+
+                                    <th>Doctor</th>
+
+                                    <th>Diagnosis</th>
+
+                                    <th>Medicines</th>
+
+                                    <th>Date</th>
+
+                                    <th>Action</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="prescriptionTable">
+
+                                <tr>
+
+                                    <td colspan="7" class="text-center p-5">
+
+                                        Loading...
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- View Prescription Modal -->
+
+<div class="modal fade"
+     id="prescriptionModal"
+     tabindex="-1">
+
+    <div class="modal-dialog modal-lg">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+
+                    Prescription Details
+
+                </h5>
+
+                <button
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <table class="table">
+
+                    <tr>
+                        <th width="180">Patient</th>
+                        <td id="viewPatient"></td>
+                    </tr>
+
+                    <tr>
+                        <th>Doctor</th>
+                        <td id="viewDoctor"></td>
+                    </tr>
+
+                    <tr>
+                        <th>Diagnosis</th>
+                        <td id="viewDiagnosis"></td>
+                    </tr>
+
+                    <tr>
+                        <th>Medicines</th>
+                        <td id="viewMedicines"></td>
+                    </tr>
+
+                    <tr>
+                        <th>Notes</th>
+                        <td id="viewNotes"></td>
+                    </tr>
+
+                    <tr>
+                        <th>Date</th>
+                        <td id="viewDate"></td>
+                    </tr>
+
+                </table>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-success"
+                    onclick="printPrescription()">
+
+                    <i class="bi bi-printer"></i>
+
+                    Print
+
+                </button>
+
+                <button
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+{% block extra_js %}
+
+<script src="{% static 'js/doctor-Prescription.js' %}"></script>
 
 {% endblock %}

@@ -15,7 +15,13 @@ async function loadDoctorDashboard() {
         );
 
         const data = await safeJson(response);
+        const doctorName =
+            document.getElementById("doctorName");
 
+        if (doctorName) {
+            doctorName.innerText =
+                data.doctor_name || "Doctor";
+        }
         const totalAppointments =
             document.getElementById("totalAppointments");
 

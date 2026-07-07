@@ -1,36 +1,187 @@
 {% extends "base_doctor.html" %}
 {% load static %}
+{% block title %}
+Doctor Schedule
+{% endblock %}
+
 {% block content %}
 
-<h3>Schedule 🗓</h3>
+<div class="container-fluid">
 
-<div class="card-box mb-3">
+    <!-- Page Header -->
 
-    <input id="scheduleDay" class="form-control mb-2" placeholder="Day">
+    <div class="mb-4">
 
-    <input id="startTime" type="time" class="form-control mb-2">
+        <h3 class="fw-bold">
+            Manage Schedule
+        </h3>
 
-    <input id="endTime" type="time" class="form-control mb-2">
+        <p class="text-muted mb-0">
+            Add your available consultation timings.
+        </p>
 
-    <button class="btn btn-success" onclick="addSchedule()">
-        Add Schedule
-    </button>
+    </div>
+
+    <div class="row">
+
+        <!-- Add Schedule -->
+
+        <div class="col-lg-4 mb-4">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <i class="bi bi-calendar-plus"></i>
+
+                    Add Schedule
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Day
+
+                        </label>
+
+                        <select
+                            id="scheduleDay"
+                            class="form-select"
+                        >
+
+                            <option value="">
+                                Select Day
+                            </option>
+
+                            <option>Monday</option>
+                            <option>Tuesday</option>
+                            <option>Wednesday</option>
+                            <option>Thursday</option>
+                            <option>Friday</option>
+                            <option>Saturday</option>
+                            <option>Sunday</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Start Time
+
+                        </label>
+
+                        <input
+                            type="time"
+                            id="startTime"
+                            class="form-control"
+                        >
+
+                    </div>
+
+                    <div class="mb-4">
+
+                        <label class="form-label">
+
+                            End Time
+
+                        </label>
+
+                        <input
+                            type="time"
+                            id="endTime"
+                            class="form-control"
+                        >
+
+                    </div>
+
+                    <button
+                        class="btn btn-primary w-100"
+                        onclick="addSchedule()"
+                    >
+
+                        <i class="bi bi-plus-circle"></i>
+
+                        Add Schedule
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Schedule List -->
+
+        <div class="col-lg-8">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <i class="bi bi-clock-history"></i>
+
+                    Weekly Schedule
+
+                </div>
+
+                <div class="card-body p-0">
+
+                    <div class="table-responsive">
+
+                        <table class="table table-hover mb-0">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Day</th>
+
+                                    <th>Start Time</th>
+
+                                    <th>End Time</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="scheduleTable">
+
+                                <tr>
+
+                                    <td colspan="3" class="text-center p-5">
+
+                                        Loading...
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Day</th>
-            <th>Start</th>
-            <th>End</th>
-        </tr>
-    </thead>
-
-    <tbody id="scheduleTable">
-        <tr><td colspan="3">Loading...</td></tr>
-    </tbody>
-</table>
+{% endblock %}
+{% block extra_js %}
 
 <script src="{% static 'js/doctor-schedule.js' %}"></script>
 
