@@ -12,7 +12,7 @@ from notifications.utils import create_notification
 from io import BytesIO
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
-
+from billing.models import Invoice
 
 class PrescriptionAPIView(generics.ListCreateAPIView):
 
@@ -75,6 +75,19 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
             rows = Appointment.objects.filter(id=appointment.id).update(
                 status="completed"
             )
+
+            if not Invoice.objects.filter(
+                appointment=appointment
+            ).exists():
+
+                Invoice.objects.create(
+                    appointment=appointment,
+                    patient=appointment.patient,
+                    doctor=appointment.doctor,
+                    consultation_fee=appointment.doctor.fee,
+                    extra_charge=0,
+                    discount=0,
+                )
             create_notification(
                 receiver=appointment.patient,
                 title="Prescription Ready",

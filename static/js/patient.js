@@ -296,6 +296,102 @@ async function loadLatestPrescriptions() {
 
 }
 /* =========================================
+        LOAD LATEST INVOICES
+========================================= */
+
+async function loadLatestInvoices() {
+
+    const container = document.getElementById("latestInvoices");
+
+    if (!container) return;
+
+    try {
+
+        const response = await authFetch(`${BASE_URL}/api/invoices/`);
+        console.log("Status:", response.status);
+        const data = await safeJson(response);
+        console.log("Response:", data);
+
+
+        if (!response.ok) {
+
+            container.innerHTML = `
+                <p class="text-danger">
+                    Unable to load invoices.
+                </p>
+            `;
+
+            return;
+        }
+
+        const invoices = data.results || data;
+
+        if (!invoices.length) {
+
+            container.innerHTML = `
+                <p class="text-muted">
+                    No invoices available.
+                </p>
+            `;
+
+            return;
+        }
+
+        container.innerHTML = invoices
+            .slice(0, 5)
+            .map(i => `
+                <div class="card mb-2 shadow-sm">
+
+                    <div class="card-body d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <h6 class="mb-1">
+                                ${i.invoice_number}
+                            </h6>
+
+                            <small class="text-muted">
+                                Dr. ${i.doctor_name}
+                            </small>
+
+                            <br>
+
+                            <small>
+                                ₹${i.total_amount}
+                            </small>
+
+                        </div>
+
+                        <button
+                            class="btn btn-warning btn-sm"
+                            onclick="viewInvoice(${i.id})">
+
+                            View
+
+                        </button>
+
+                    </div>
+
+                </div>
+            `).join("");
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        container.innerHTML = `
+            <p class="text-danger">
+                Network Error
+            </p>
+        `;
+    }
+
+}
+
+
+/* =========================================
         INIT
 ========================================= */
 document.addEventListener("DOMContentLoaded", async function () {
@@ -304,6 +400,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     loadDashboard();
     loadLatestPrescriptions();
+    loadLatestInvoices();
     initializeDoctorSelect();
     loadNotifications();
     getE1("doctorSelect").addEventListener("change", loadAvailableSlots);

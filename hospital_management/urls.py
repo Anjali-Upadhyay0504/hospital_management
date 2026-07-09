@@ -73,6 +73,13 @@ urlpatterns = [
     ),
 
 
+    path(
+        "patient/invoices/",
+        TemplateView.as_view(template_name="patient-invoice.html"),
+        name="patient-prescriptions",
+    ),
+
+
     # =========================
     # ADMIN PANEL
     # =========================
@@ -85,6 +92,7 @@ urlpatterns = [
     path('api/appointments/', include('appointments.urls')),
     path('api/doctor/', include('doctor.urls')),
     path('api/schedule/', include('schedule.urls')),
+    path("api/invoices/", include("billing.urls")),
     path('api/prescriptions/', include('prescriptions.urls')),
     path('api/dashboard/', include('dashboard.urls')),
     path( "api/notifications/", include("notifications.urls")

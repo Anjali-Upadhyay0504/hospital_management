@@ -492,7 +492,7 @@ Book Appointment
 <!-- ==========================
       PRESCRIPTIONS
 ========================== -->
-<div class="card shadow border-0 mb-4">
+<div class="card shadow border-0 mb-4 mt-4 mx-5">
 
     <div class="card-header bg-danger d-flex justify-content-between align-items-center">
 
@@ -514,6 +514,185 @@ Book Appointment
         <div id="latestPrescription">
 
             Loading...
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ==========================
+      LATEST INVOICES
+========================== -->
+
+<div class="card shadow border-0 mb-4 mt-4 mx-5">
+
+    <div class="card-header bg-warning d-flex justify-content-between align-items-center">
+
+        <h5 class="mb-0">
+            💳 Latest Invoices
+        </h5>
+        <a href="/patient/invoices/"
+           class="btn btn-light btn-sm">
+
+            View All
+
+        </a>
+    </div>
+
+    <div class="card-body">
+
+        <div id="latestInvoices">
+
+            Loading...
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ==========================
+        INVOICE MODAL
+========================== -->
+
+<div class="modal fade"
+     id="invoiceModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+        <div class="modal-content shadow">
+
+            <div class="modal-header bg-warning">
+
+                <h5 class="modal-title">
+                    <i class="bi bi-receipt"></i>
+                    Invoice Details
+                </h5>
+
+                <button class="btn-close"
+                        data-bs-dismiss="modal"></button>
+
+            </div>
+
+            <div class="modal-body"
+                 id="invoicePrintArea">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="fw-bold">
+                            Invoice Number
+                        </label>
+
+                        <div id="invoiceNumber"
+                             class="form-control bg-light"></div>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="fw-bold">
+                            Payment Status
+                        </label>
+
+                        <div id="paymentStatus"
+                             class="form-control bg-light"></div>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="fw-bold">
+                            Patient
+                        </label>
+
+                        <div id="invoicePatient"
+                             class="form-control bg-light"></div>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="fw-bold">
+                            Doctor
+                        </label>
+
+                        <div id="invoiceDoctor"
+                             class="form-control bg-light"></div>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="fw-bold">
+                            Consultation Fee
+                        </label>
+
+                        <div id="consultationFee"
+                             class="form-control bg-light"></div>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="fw-bold">
+                            Extra Charge
+                        </label>
+
+                        <div id="extraCharge"
+                             class="form-control bg-light"></div>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="fw-bold">
+                            Discount
+                        </label>
+
+                        <div id="discount"
+                             class="form-control bg-light"></div>
+
+                    </div>
+
+                    <div class="col-12">
+
+                        <label class="fw-bold">
+                            Total Amount
+                        </label>
+
+                        <div id="totalAmount"
+                             class="form-control bg-light fs-5 fw-bold"></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Close
+
+                </button>
+
+                <button class="btn btn-warning"
+                        onclick="printInvoice()">
+
+                    <i class="bi bi-printer"></i>
+
+                    Print
+
+                </button>
+
+            </div>
 
         </div>
 
@@ -779,6 +958,7 @@ every day.
 <script src="{% static 'js/notifications.js' %}"></script>
 <script src="{% static 'js/patient.js' %}"></script>
 <script src="{% static 'js/patient-prescription.js' %}"></script>
+<script src="{% static 'js/patient-invoice.js' %}"></script>
 
 
 </body>

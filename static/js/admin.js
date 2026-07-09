@@ -41,7 +41,7 @@ async function loadAdminDashboard() {
 
         const response = await authFetch(`${BASE_URL}/api/dashboard/admin/`);
         const data = await safeJson(response);
-
+         console.log(data);
         // cards update
         document.getElementById("doctorsCount").innerText =
             data.total_doctors || 0;
@@ -58,10 +58,10 @@ async function loadAdminDashboard() {
         document.getElementById("pendingAppointments").innerText =
             data.pending_appointments || 0;
 
-        document.getElementById("approvedAppointments").innerText =
+        document.getElementById("approveAppointments").innerText =
             data.approved_appointments || 0;
 
-        document.getElementById("rejectedAppointments").innerText =
+        document.getElementById("rejectAppointments").innerText =
             data.rejected_appointments || 0;
 
         renderStatusChart(data);
@@ -153,6 +153,7 @@ async function loadDoctorRequests() {
         });
 
     } catch (error) {
+        console.error("dashbaord error: ",error)
         console.error(error);
     }
 }
@@ -231,7 +232,119 @@ async function rejectRequest(id) {
 
     }
 }
+async function loadInvoices(){
 
+    try{
+
+        const response = await authFetch(
+            `${BASE_URL}/api/invoices/`
+        );
+
+
+        const invoices = await response.json();
+
+
+        const tbody = document.getElementById(
+            "invoiceTableBody"
+        );
+
+
+        tbody.innerHTML = "";
+
+
+        invoices.forEach(invoice => {
+
+
+            tbody.innerHTML += `
+
+            <tr>
+
+                <td>${invoice.id}</td>
+
+                <td>${invoice.patient_name}</td>
+
+                <td>${invoice.doctor_name}</td>
+
+                <td>₹${invoice.total_amount}</td>
+
+
+                <td>
+                    <span class="badge bg-info">
+                        ${invoice.payment_status}
+                    </span>
+                </td>
+
+
+                <td>
+
+                ${
+                    invoice.payment_status === "unpaid"
+
+                    ?
+
+                    `<button 
+                    class="btn btn-success btn-sm"
+                    onclick="markInvoicePaid(${invoice.id})">
+                    Mark Paid
+                    </button>`
+
+                    :
+
+                    "Paid"
+
+                }
+
+
+                </td>
+
+                
+                <td>
+                ${
+                    invoice.paid_at
+                        ? new Date(invoice.paid_at).toLocaleDateString()
+                        : "-"
+                }
+                </td>
+           
+            </tr>
+
+            `;
+
+        });
+
+
+    }
+    catch(error){
+
+        console.log(
+            "Invoice error",
+            error
+        );
+
+    }
+
+}
+
+async function markInvoicePaid(id){
+
+
+    const response = await authFetch(
+        `${BASE_URL}/api/invoices/${id}/mark-paid/`,
+        {
+            method:"PATCH"
+        }
+    );
+
+
+    const data = await response.json();
+
+
+    alert(data.message);
+
+// for refresh UI that's call again
+    loadInvoices();
+
+}
 
 
 // =========================
@@ -240,8 +353,9 @@ async function rejectRequest(id) {
 document.addEventListener("DOMContentLoaded", async function () {
 
     await protectPage("admin");
-
+    
     loadAdminDashboard();
     loadDoctorRequests();
+    loadInvoices();
     loadNotifications();
 });
