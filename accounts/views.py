@@ -16,6 +16,7 @@ class MeAPIView(RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+    
 
 class PatientListAPIView(generics.ListAPIView):
 
