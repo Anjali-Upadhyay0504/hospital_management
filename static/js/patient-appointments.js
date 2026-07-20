@@ -1,6 +1,26 @@
 let currentPage = 1;
 let currentSearch = "";
+function getStatusBadge(status) {
+    switch (status) {
+        case "approved":
+            return "bg-success";
 
+        case "rejected":
+            return "bg-danger";
+
+        case "pending":
+            return "bg-warning text-dark";
+
+        case "completed":
+            return "bg-primary";
+
+        case "cancelled":
+            return "bg-secondary";   // Grey
+
+        default:
+            return "bg-dark";
+    }
+}
 /* =========================================
         LOAD APPOINTMENTS
 ========================================= */
@@ -10,11 +30,15 @@ async function loadAppointments(page = 1) {
     currentPage = page;
 
     const search = getE1("searchInput")?.value.trim() || "";
+    const status = getE1("statusFilter")?.value || "";
 
     let url = `${BASE_URL}/api/appointments/?page=${page}`;
 
     if (search) {
         url += `&search=${encodeURIComponent(search)}`;
+    }
+    if (status) {
+    url += `&status=${status}`;
     }
 
     try {
@@ -58,16 +82,11 @@ function renderAppointments(list) {
 
         let actions = "";
 
-        if (a.status === "pending") {
+            if (a.status === "pending" || a.status === "approved") {
             actions = `
-                <button class="btn btn-success btn-sm"
-                    onclick="updateStatus(${a.id}, 'approved')">
-                    Approve
-                </button>
-
                 <button class="btn btn-danger btn-sm"
-                    onclick="updateStatus(${a.id}, 'rejected')">
-                    Reject
+                    onclick="cancelAppointment(${a.id})">
+                    Cancel
                 </button>
             `;
         }
@@ -78,8 +97,11 @@ function renderAppointments(list) {
                 <td>${a.doctor_name}</td>
                 <td>${a.doctor_specialization}</td>
                 <td>${formatDate(a.appointment_date)}</td>
-                <td>
-                    <span class="badge bg-primary">${a.status}</span>
+                <td>                               
+                <span class="badge ${getStatusBadge(a.status)}">
+                    ${a.status}
+                </span>
+            
                 </td>
                 <td>${actions || "-"}</td>
             </tr>
@@ -115,12 +137,22 @@ function renderPagination(data) {
 
     container.innerHTML = html;
 }
+let searchTimer = null;
 
+getE1("searchInput").addEventListener("input", () => {
+
+    clearTimeout(searchTimer);
+
+    searchTimer = setTimeout(() => {
+        loadAppointments(1);
+    }, 400);
+
+});
 
 /* INIT */
-document.addEventListener("DOMContentLoaded", () => {
-    loadAppointments(1);
-});
+// document.addEventListener("DOMContentLoaded", () => {
+//     loadAppointments(1);
+// });
 /* =========================================
         CANCEL APPOINTMENT
 ========================================= */
@@ -134,7 +166,7 @@ async function cancelAppointment(id) {
         const res = await authFetch(
             `${BASE_URL}/api/appointments/${id}/cancel/`,
             {
-                method: "POST"
+                method: "PATCH"
             }
         );
 
@@ -158,30 +190,24 @@ async function cancelAppointment(id) {
 /* =========================================
         INITIAL LOAD
 ========================================= */
+document.addEventListener("DOMContentLoaded", async () => {
 
-document.addEventListener("DOMContentLoaded", () => {
+    await protectPage("patient");
 
-    if (typeof protectPage === "function") {
-        protectPage("patient");
-    }
+    loadAppointments(1);
 
-    // Apply button
     getE1("filterBtn").addEventListener("click", () => {
         loadAppointments(1);
     });
 
-    // Search on Enter
     getE1("searchInput").addEventListener("keyup", (e) => {
         if (e.key === "Enter") {
             loadAppointments(1);
         }
     });
 
-    // Auto filter on status change
     getE1("statusFilter").addEventListener("change", () => {
         loadAppointments(1);
     });
-
-    loadAppointments();
 
 });

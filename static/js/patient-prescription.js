@@ -2,22 +2,44 @@ async function loadPrescriptions() {
 
     try {
 
-        const response = await authFetch(`${BASE_URL}/api/prescriptions/`);
+        const response = await authFetch(
+            `${BASE_URL}/api/prescriptions/`
+        );
 
         const data = await safeJson(response);
 
         if (!response.ok) {
 
-            showToast("Unable to load prescriptions", "error");
+            showToast(
+                data?.detail || "Unable to load prescriptions",
+                "error"
+            );
 
             return;
         }
 
         const prescriptions = data.results || data;
 
-        const tbody = document.getElementById("prescriptionTableBody");
+        const tbody = document.getElementById(
+            "prescriptionTableBody"
+        );
+
+        if (prescriptions.length === 0) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center">
+                        No prescriptions found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
 
         tbody.innerHTML = prescriptions.map(p => `
+
             <tr>
 
                 <td>${formatDate(p.created_at)}</td>
@@ -28,8 +50,11 @@ async function loadPrescriptions() {
 
                 <td>
 
-                    <button class="btn btn-primary btn-sm"
-                            onclick="viewPrescription(${p.id})">
+                    <button
+                        class="btn btn-primary btn-sm"
+                        onclick="viewPrescription(${p.id})">
+
+                        <i class="bi bi-eye"></i>
 
                         View
 
@@ -37,36 +62,62 @@ async function loadPrescriptions() {
 
                 </td>
 
+                <td>
+
+                    <button
+                        class="btn btn-danger btn-sm"
+                        onclick="downloadPrescription(${p.id})">
+
+                        <i class="bi bi-file-earmark-pdf"></i>
+
+                        PDF
+
+                    </button>
+
+                </td>
+
             </tr>
+
         `).join("");
 
     }
 
-    catch (err) {
+    catch (error) {
 
-        console.error(err);
+        console.error(error);
 
-        showToast("Network Error", "error");
+        showToast(
+            "Network Error",
+            "error"
+        );
 
     }
 
 }
+
+
+
 async function viewPrescription(id) {
 
     try {
 
-        const response = await authFetch(`${BASE_URL}/api/prescriptions/${id}/`);
+        const response = await authFetch(
+            `${BASE_URL}/api/prescriptions/${id}/`
+        );
 
         const data = await safeJson(response);
 
         if (!response.ok) {
 
             showToast(
-                data?.detail || data?.error || "Unable to load prescription",
+                data?.detail ||
+                data?.error ||
+                "Unable to load prescription",
                 "error"
             );
 
             return;
+
         }
 
         document.getElementById("viewPatient").textContent =
@@ -87,11 +138,9 @@ async function viewPrescription(id) {
         document.getElementById("viewDate").textContent =
             formatDate(data.created_at);
 
-        const modal = new bootstrap.Modal(
+        new bootstrap.Modal(
             document.getElementById("prescriptionModal")
-        );
-
-        modal.show();
+        ).show();
 
     }
 
@@ -99,19 +148,104 @@ async function viewPrescription(id) {
 
         console.error(error);
 
-        showToast("Network Error", "error");
+        showToast(
+            "Network Error",
+            "error"
+        );
 
     }
 
 }
-document.addEventListener("DOMContentLoaded", async () => {
 
-    await protectPage("patient");
 
-   
-      if (document.getElementById("prescriptionTableBody")) {
-        loadPrescriptions();
+
+async function downloadPrescription(id) {
+
+    try {
+
+        const response = await authFetch(
+
+            `${BASE_URL}/api/prescriptions/${id}/pdf/`,
+
+            {
+                method: "GET"
+            }
+
+        );
+
+        if (!response.ok) {
+
+            const data = await safeJson(response);
+
+            showToast(
+                data?.detail ||
+                data?.error ||
+                "Unable to download PDF",
+                "error"
+            );
+
+            return;
+
+        }
+
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+
+        link.href = url;
+
+        link.download = `Prescription_${id}.pdf`;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        window.URL.revokeObjectURL(url);
+
+        showToast(
+            "Prescription downloaded successfully",
+            "success"
+        );
+
     }
 
+    catch (error) {
 
-});
+        console.error(error);
+
+        showToast(
+            "Network Error",
+            "error"
+        );
+
+    }
+
+}
+
+
+
+document.addEventListener(
+
+    "DOMContentLoaded",
+
+    async () => {
+
+        await protectPage("patient");
+
+        if (
+            document.getElementById(
+                "prescriptionTableBody"
+            )
+        ) {
+
+            loadPrescriptions();
+
+        }
+
+    }
+
+);

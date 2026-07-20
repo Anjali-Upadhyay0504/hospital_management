@@ -33,7 +33,14 @@
                 </a>
 
                 <div id="msg" class="text-center mt-3"></div>
-
+                <button id="google-login" class="btn btn-danger w-100">
+                    Continue with Google
+                </button>
+                    <script>
+document.getElementById("google-login").addEventListener("click", function () {
+    window.location.href = "/accounts/google/login/";
+});
+</script>
             </div>
 
         </div>

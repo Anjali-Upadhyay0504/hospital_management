@@ -229,7 +229,7 @@ async function updateStatus(id, statusValue) {
 function handleSearch(value) {
 
     currentSearch = value;
-
+    console.log("Searching:", value);
     currentPage = 1;
 
     clearTimeout(searchTimer);

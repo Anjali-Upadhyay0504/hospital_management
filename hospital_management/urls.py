@@ -6,7 +6,8 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView
 )
-
+from django.conf import settings
+from django.conf.urls.static import static
 urlpatterns = [
 
     # =========================
@@ -78,7 +79,11 @@ urlpatterns = [
         TemplateView.as_view(template_name="patient-invoice.html"),
         name="patient-prescriptions",
     ),
-
+    path(
+    "patient/reports/",
+    TemplateView.as_view(template_name="patient-reports.html"),
+    name="patient-reports",
+),
 
     # =========================
     # ADMIN PANEL
@@ -95,11 +100,21 @@ urlpatterns = [
     path("api/invoices/", include("billing.urls")),
     path('api/prescriptions/', include('prescriptions.urls')),
     path('api/dashboard/', include('dashboard.urls')),
-    path( "api/notifications/", include("notifications.urls")
-),
+    path( "api/notifications/", include("notifications.urls")),
+    path( "api/", include("reports.urls")),
     # =========================
     # AUTH (JWT)
     # =========================
     path('api/token/', TokenObtainPairView.as_view()),
     path('api/token/refresh/', TokenRefreshView.as_view()),
+
+#    ==================
+#    google auth
+#    =================
+    path("accounts/", include("allauth.urls")),
 ]
+if settings.DEBUG:
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
+    )

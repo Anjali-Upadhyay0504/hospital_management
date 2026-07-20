@@ -13,7 +13,18 @@ from io import BytesIO
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from billing.models import Invoice
+from django.shortcuts import get_object_or_404
 
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+)
+
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.colors import HexColor
 class PrescriptionAPIView(generics.ListCreateAPIView):
 
     serializer_class = PrescriptionSerializer
@@ -121,3 +132,181 @@ class PrescriptionDetailAPIView(generics.RetrieveAPIView):
             return Prescription.objects.all()
 
         return Prescription.objects.none()
+    
+
+class PrescriptionPDFAPIView(generics.GenericAPIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+
+        prescription = get_object_or_404(
+            Prescription,
+            pk=pk
+        )
+
+        user = request.user
+
+        # Permission Check
+        if user.role == "patient":
+            if prescription.appointment.patient != user:
+                raise PermissionDenied()
+
+        elif user.role == "doctor":
+            if prescription.appointment.doctor.user != user:
+                raise PermissionDenied()
+
+        # Admin can access everything
+
+        response = HttpResponse(
+            content_type="application/pdf"
+        )
+
+        response["Content-Disposition"] = (
+            f'attachment; filename="Prescription_{prescription.id}.pdf"'
+        )
+
+        doc = SimpleDocTemplate(response)
+
+        styles = getSampleStyleSheet()
+
+        title_style = ParagraphStyle(
+            "Title",
+            parent=styles["Heading1"],
+            alignment=TA_CENTER,
+            textColor=HexColor("#0d6efd"),
+            spaceAfter=20,
+        )
+
+        heading_style = styles["Heading2"]
+
+        normal_style = styles["BodyText"]
+
+        story = []
+
+        # ==========================
+        # Hospital Title
+        # ==========================
+
+        story.append(
+            Paragraph(
+                "Hospital Management System",
+                title_style
+            )
+        )
+
+        story.append(Spacer(1, 20))
+
+        appointment = prescription.appointment
+
+        # ==========================
+        # Patient Information
+        # ==========================
+
+        story.append(
+            Paragraph(
+                f"<b>Prescription ID:</b> {prescription.id}",
+                normal_style
+            )
+        )
+
+        story.append(
+            Paragraph(
+                f"<b>Patient:</b> {appointment.patient.username}",
+                normal_style
+            )
+        )
+
+        story.append(
+            Paragraph(
+                f"<b>Doctor:</b> Dr. {appointment.doctor.user.username}",
+                normal_style
+            )
+        )
+
+        story.append(
+            Paragraph(
+                f"<b>Specialization:</b> {appointment.doctor.specialization}",
+                normal_style
+            )
+        )
+
+        story.append(
+            Paragraph(
+                f"<b>Appointment Date:</b> {appointment.appointment_date}",
+                normal_style
+            )
+        )
+
+        story.append(Spacer(1, 20))
+
+        # ==========================
+        # Diagnosis
+        # ==========================
+
+        story.append(
+            Paragraph(
+                "Diagnosis",
+                heading_style
+            )
+        )
+
+        story.append(
+            Paragraph(
+                prescription.diagnosis,
+                normal_style
+            )
+        )
+
+        story.append(Spacer(1, 15))
+
+        # ==========================
+        # Medicines
+        # ==========================
+
+        story.append(
+            Paragraph(
+                "Medicines",
+                heading_style
+            )
+        )
+
+        story.append(
+            Paragraph(
+                prescription.medicines.replace("\n", "<br/>"),
+                normal_style
+            )
+        )
+
+        story.append(Spacer(1, 15))
+
+        # ==========================
+        # Notes
+        # ==========================
+
+        story.append(
+            Paragraph(
+                "Doctor Notes",
+                heading_style
+            )
+        )
+
+        story.append(
+            Paragraph(
+                prescription.notes or "No Notes",
+                normal_style
+            )
+        )
+
+        story.append(Spacer(1, 30))
+
+        story.append(
+            Paragraph(
+                "Doctor Signature: ____________________",
+                normal_style
+            )
+        )
+
+        doc.build(story)
+
+        return response

@@ -49,6 +49,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     "doctor__user__username",
     "doctor__user__first_name",
     "doctor__user__last_name",
+    "doctor__specialization",
     "reason",
 ]
 
@@ -172,7 +173,10 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             "status": appointment.status
         })
     
-
+#   request.query_params ka use GET request ke URL me bheje gaye query parameters ko read karne ke liye hota hai.
+#  Iska common use search, filtering, pagination aur sorting me hota hai. 
+# Example: ?page=2&search=rahul ko backend me request.query_params.get("page") 
+# aur request.query_params.get("search") se access kiya jata hai.
     # ==================
     #  slot 
     # =================
@@ -228,8 +232,8 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     
 
 
-   
-    @action(detail=True, methods=["post"])
+   # can also use the patch method instead of post 
+    @action(detail=True, methods=["patch"])
     def cancel(self, request, pk=None):
 
         appointment = self.get_object()

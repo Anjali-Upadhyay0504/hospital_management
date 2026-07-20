@@ -33,6 +33,8 @@ async function loadDashboard() {
         // =========================
         // RECENT APPOINTMENTS
         // =========================
+
+        
         renderRecentAppointments(data.recent_appointments || []);
 
         // =========================
@@ -399,6 +401,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     await protectPage("patient");
 
     loadDashboard();
+
     loadLatestPrescriptions();
     loadLatestInvoices();
     initializeDoctorSelect();

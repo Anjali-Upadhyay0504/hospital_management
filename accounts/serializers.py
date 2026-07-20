@@ -10,7 +10,7 @@ class SignupSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "password": {"write_only": True}
         }
-
+#create_user() method password bhi hash kr dete hai
     def create(self, validated_data):
         return User.objects.create_user(
             username=validated_data["username"],
