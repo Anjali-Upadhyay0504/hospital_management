@@ -391,7 +391,43 @@ async function loadLatestInvoices() {
     }
 
 }
+// ========================
+//  report 
+//  =====================
+async function loadReportSummary() {
 
+    try {
+
+        const response = await authFetch(
+            `${BASE_URL}/api/medical-reports/`
+        );
+
+        const data = await safeJson(response);
+
+        if (!response.ok) return;
+
+        const reports = data.results || data;
+
+        document.getElementById("reportCount").textContent = reports.length;
+
+        if (reports.length > 0) {
+
+            document.getElementById("latestReportDate").textContent =
+                new Date(reports[0].uploaded_at).toLocaleDateString();
+
+        } else {
+
+            document.getElementById("latestReportDate").textContent = "--";
+
+        }
+
+    } catch (err) {
+
+        console.error(err);
+
+    }
+
+}
 
 /* =========================================
         INIT
@@ -406,6 +442,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadLatestInvoices();
     initializeDoctorSelect();
     loadNotifications();
+    loadReportSummary();
     getE1("doctorSelect").addEventListener("change", loadAvailableSlots);
 
     // Date change pe slots reload

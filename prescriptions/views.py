@@ -48,9 +48,17 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
         if user.role == "admin":
             return Prescription.objects.all()
 
-        return Prescription.objects.none()
+        # return Prescription.objects.none()
 
-            
+        appointment_id = self.request.query_params.get("appointment")
+
+        if appointment_id:
+            queryset = queryset.filter(
+                appointment_id=appointment_id
+            )
+
+
+        return queryset           
 
     # CREATE (POST)
 

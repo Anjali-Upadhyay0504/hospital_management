@@ -1,5 +1,6 @@
 
-
+const params = new URLSearchParams(window.location.search);
+const selectedAppointment = params.get("appointment");
 
 // =========================================
 // LOAD APPROVED APPOINTMENTS
@@ -56,7 +57,12 @@ async function loadApprovedAppointments() {
             `;
 
         });
+        // URL se appointment auto select
+        if (selectedAppointment) {
 
+            select.value = selectedAppointment;
+
+        }
     }
 
     catch (error) {
@@ -184,6 +190,12 @@ async function savePrescription() {
 
         await loadApprovedAppointments();
 
+        if(selectedAppointment){
+            document.getElementById("appointmentSelect").value = selectedAppointment;
+        }
+
+
+
         await loadPrescriptions();
 
     }
@@ -206,6 +218,9 @@ async function savePrescription() {
 //// =========================================
 // LOAD PRESCRIPTIONS
 // =========================================
+
+// const params = new URLSearchParams(window.location.search);
+
 async function loadPrescriptions() {
 
     const table = document.getElementById("prescriptionTable");
@@ -222,9 +237,15 @@ async function loadPrescriptions() {
 
     try {
 
-        const response = await authFetch(
-            `${BASE_URL}/api/prescriptions/`
-        );
+        const appointmentId = params.get("appointment");
+
+        let url = `${BASE_URL}/api/prescriptions/`;
+
+        if (appointmentId) {
+            url += `?appointment=${appointmentId}`;
+        }
+
+        const response = await authFetch(url);
 
         const data = await safeJson(response);
 
@@ -440,3 +461,4 @@ window.loadPrescriptions = loadPrescriptions;
 window.viewPrescription = viewPrescription;
 
 window.printPrescription = printPrescription;
+

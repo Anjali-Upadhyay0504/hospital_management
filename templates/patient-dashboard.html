@@ -489,26 +489,76 @@ Book Appointment
     </div>
     
 </div>
-<div  class="card shadow border-0 mb-4">
-    <h3>Upload Medical Report</h3>
+<div class="card shadow border-0 mb-4 mt-4 mx-5">
 
-    <select id="appointmentSelect">
-        <option value="">Select Appointment</option>
-    </select>
+    <div class="card-header bg-info d-flex justify-content-between align-items-center">
 
-    <input
-        type="text"
-        id="reportTitle"
-        placeholder="Report Title">
+        <h5 class="mb-0">
+            <i class="bi bi-file-earmark-medical"></i>
+            Medical Reports
+        </h5>
 
-    <input
-        type="file"
-        id="reportFile"
-        accept=".pdf,.jpg,.jpeg,.png">
+        <a href="/patient/reports/"
+           class="btn btn-light btn-sm">
 
-    <button onclick="uploadReport()">
-        Upload Report
-    </button>
+            View All
+
+        </a>
+
+    </div>
+
+    <div class="card-body">
+
+        <p class="text-muted mb-3">
+
+            Upload and manage your medical reports.
+
+        </p>
+
+        <div class="row text-center">
+
+            <div class="col-md-6">
+
+                <h3 id="reportCount">0</h3>
+
+                <small>Total Reports</small>
+
+            </div>
+
+            <div class="col-md-6">
+
+                <h3 id="latestReportDate">--</h3>
+
+                <small>Latest Upload</small>
+
+            </div>
+
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+
+            <a href="/patient/reports/"
+               class="btn btn-primary">
+
+                <i class="bi bi-upload"></i>
+
+                Upload Report
+
+            </a>
+
+            <a href="/patient/reports/"
+               class="btn btn-outline-primary">
+
+                <i class="bi bi-folder2-open"></i>
+
+                View Reports
+
+            </a>
+
+        </div>
+
+    </div>
+
 </div>
     
 <!-- ==========================

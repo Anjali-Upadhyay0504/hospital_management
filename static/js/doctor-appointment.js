@@ -138,14 +138,22 @@ function renderAppointments(appointments) {
             `;
         }
 
-        if (item.status === "approved") {
+        if (item.status === "approved" || item.status === "completed") {
+
             actions = `
                 <button class="btn btn-primary btn-sm"
                     onclick="window.location.href='/doctor/prescriptions/?appointment=${item.id}'">
                     Prescription
                 </button>
+
+                <button class="btn btn-info btn-sm "
+                    onclick="viewReports(${item.id})">
+                    Medical Reports
+                </button>
             `;
+
         }
+         
 
         table.innerHTML += `
             <tr>
@@ -161,7 +169,8 @@ function renderAppointments(appointments) {
                 <td>${actions || "-"}</td>
             </tr>
         `;
-    });
+    
+});
 }
 
 // =========================================
@@ -242,6 +251,120 @@ function handleSearch(value) {
 
 }
 // =========================================
+// VIEW REPORTS 
+// =========================================
+async function viewReports(appointmentId) {
+
+    try {
+
+        const response = await authFetch(
+
+            `${BASE_URL}/api/medical-reports/appointment_reports/?appointment=${appointmentId}`
+
+        );
+
+        const reports = await safeJson(response);
+
+        if (!response.ok) {
+
+            showToast(
+                "Unable to load reports",
+                "error"
+            );
+
+            return;
+
+        }
+
+        const body =
+            document.getElementById(
+                "reportsModalBody"
+            );
+
+        body.innerHTML = "";
+
+        if (reports.length === 0) {
+
+            body.innerHTML = `
+
+                <div class="alert alert-info">
+
+                    No reports uploaded.
+
+                </div>
+
+            `;
+
+        }
+
+        else {
+
+            reports.forEach(report => {
+
+                body.innerHTML += `
+
+                <div class="card mb-3">
+
+                    <div class="card-body">
+
+                        <h6>
+
+                            ${report.title}
+
+                        </h6>
+
+                        <small class="text-muted">
+
+                            Uploaded:
+
+                            ${new Date(
+                                report.uploaded_at
+                            ).toLocaleDateString()}
+
+                        </small>
+
+                        <br><br>
+
+                        <a
+
+                            href="${BASE_URL}${report.report_file}"
+
+                            target="_blank"
+
+                            class="btn btn-primary btn-sm">
+
+                            View Report
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+                `;
+
+            });
+
+        }
+
+        new bootstrap.Modal(
+
+            document.getElementById(
+                "reportsModal"
+            )
+
+        ).show();
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+    }
+
+}
+// =========================================
 // INIT
 // =========================================
 
@@ -263,3 +386,4 @@ window.loadAppointments = loadAppointments;
 window.updateStatus = updateStatus;
 window.handleSearch = handleSearch;
 window.filterByStatus = filterByStatus;
+window.viewReports = viewReports;

@@ -1,71 +1,67 @@
 /* ==========================
    LOAD APPOINTMENTS
 ========================== */
-
 async function loadAppointmentsForReport() {
+
+    const select = document.getElementById("appointmentSelect");
+
+    if (!select) return;
+
+
+    select.innerHTML = `
+        <option value="">
+            Loading...
+        </option>
+    `;
+
 
     try {
 
         const response = await authFetch(
-            `${BASE_URL}/api/appointments/`
+            `${BASE_URL}/api/appointments/report_appointments/`
         );
+
 
         const data = await safeJson(response);
 
+
         if (!response.ok) {
-
-            showToast(
-                "Unable to load appointments.",
-                "error"
-            );
-
+            console.log(data);
             return;
-
         }
 
-        const select =
-            document.getElementById(
-                "appointmentSelect"
-            );
 
-        if (!select) return;
+        const appointments = data.results || data;
 
-        select.innerHTML =
-            `<option value="">
+
+        select.innerHTML = `
+            <option value="">
                 Select Appointment
-            </option>`;
+            </option>
+        `;
 
-        const appointments =
-            data.results || data;
 
-        appointments.forEach(app => {
+        appointments.forEach(item => {
 
-    if (app.status !== "approved") return;
+            select.innerHTML += `
+                <option value="${item.id}">
+                    #${item.id} - ${item.doctor_name || item.patient_name || "Appointment"}
+                </option>
+            `;
 
-    select.innerHTML += `
-        <option value="${app.id}">
+        });
 
-            Dr. ${app.doctor_name}
 
-            -
+    } catch (err) {
 
-            ${new Date(
-                app.appointment_date
-            ).toLocaleDateString()}
+        console.error("ERROR:", err);
 
-        </option>
-    `;
-
-});
-
+        select.innerHTML = `
+            <option>
+                Failed to load appointments
+            </option>
+        `;
     }
-
-    catch (err) {
-
-        console.error(err);
-
-    }
-
 }
 async function uploadReport() {
 
@@ -216,6 +212,10 @@ async function loadReports() {
         }
 
         reports.forEach(report => {
+            console.log(
+                "Report URL:",
+                `${BASE_URL}${report.report_file}`
+            );
 
             container.innerHTML += `
 
@@ -247,8 +247,8 @@ async function loadReports() {
                     <div>
 
                         <a
-
                         href="${BASE_URL}${report.report_file}"
+                       
 
                         target="_blank"
 

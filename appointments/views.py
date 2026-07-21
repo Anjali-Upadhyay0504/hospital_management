@@ -262,3 +262,17 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(appointments, many=True)
 
         return Response(serializer.data)
+    
+
+
+    @action(detail=False, methods=["get"])
+    def report_appointments(self, request):
+
+        appointments = Appointment.objects.filter(
+            patient=request.user,
+            status__in=["approved", "completed"]
+        ).order_by("-appointment_date")
+
+        serializer = self.get_serializer(appointments, many=True)
+
+        return Response(serializer.data)

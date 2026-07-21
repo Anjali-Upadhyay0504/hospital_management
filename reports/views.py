@@ -7,6 +7,7 @@ from .models import MedicalReport
 from .serializers import MedicalReportSerializer
 from appointments.models import Appointment
 
+from rest_framework.decorators import action
 
 class MedicalReportViewSet(viewsets.ModelViewSet):
 
@@ -51,6 +52,12 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
             raise PermissionDenied(
                 "You cannot upload reports for another patient."
             )
+        if appointment.status not in ["approved", "completed"]:
+            raise ValidationError(
+                {
+                    "appointment": "You can upload reports only for approved or completed appointments."
+                }
+        )
 
         serializer.save(
             patient=self.request.user,
@@ -82,3 +89,27 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
                 )
 
         return super().destroy(request, *args, **kwargs)
+    
+
+
+    @action(detail=False, methods=["get"])
+    def appointment_reports(self, request):
+
+        appointment_id = request.query_params.get("appointment")
+
+        if not appointment_id:
+            return Response(
+                {"detail": "appointment id required"},
+                status=400
+            )
+
+        reports = self.get_queryset().filter(
+            appointment_id=appointment_id
+        )
+
+        serializer = self.get_serializer(
+            reports,
+            many=True
+        )
+
+        return Response(serializer.data)
