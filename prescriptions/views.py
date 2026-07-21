@@ -36,20 +36,22 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
         user = self.request.user
 
         if user.role == "doctor":
-            return Prescription.objects.filter(
+            queryset = Prescription.objects.filter(
                 appointment__doctor__user_id=user.id
             )
 
-        if user.role == "patient":
-            return Prescription.objects.filter(
+        elif user.role == "patient":
+            queryset = Prescription.objects.filter(
                 appointment__patient_id=user.id
             )
 
-        if user.role == "admin":
-            return Prescription.objects.all()
+        elif user.role == "admin":
+            queryset = Prescription.objects.all()
 
-        # return Prescription.objects.none()
+        else:
+            queryset = Prescription.objects.none()
 
+        # URL filter
         appointment_id = self.request.query_params.get("appointment")
 
         if appointment_id:
@@ -57,11 +59,7 @@ class PrescriptionAPIView(generics.ListCreateAPIView):
                 appointment_id=appointment_id
             )
 
-
-        return queryset           
-
-    # CREATE (POST)
-
+        return queryset
 
 
 

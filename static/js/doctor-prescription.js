@@ -318,6 +318,9 @@ async function loadPrescriptions() {
         });
 
         table.innerHTML = rows;
+        if (appointmentId && prescriptions.length > 0) {
+        viewPrescription(prescriptions[0].id);
+        }
 
     }
 
