@@ -39,7 +39,13 @@ urlpatterns = [
         )
     ),
 
-    
+    path(
+    "chat/",
+    TemplateView.as_view(
+        template_name="chat.html"
+    ),
+    name="chat",
+),
  # =========================
     # DOCTOR PAGES
     # =========================
@@ -102,6 +108,7 @@ urlpatterns = [
     path('api/dashboard/', include('dashboard.urls')),
     path( "api/notifications/", include("notifications.urls")),
     path( "api/", include("reports.urls")),
+    path( "api/chat/", include("chat.urls")),
     # =========================
     # AUTH (JWT)
     # =========================

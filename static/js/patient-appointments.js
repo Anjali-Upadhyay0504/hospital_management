@@ -82,31 +82,55 @@ function renderAppointments(list) {
 
         let actions = "";
 
-            if (a.status === "pending" || a.status === "approved") {
-            actions = `
-                <button class="btn btn-danger btn-sm"
+        // Pending & Approved -> Cancel Button
+        if (a.status === "pending" || a.status === "approved") {
+
+            actions += `
+                <button
+                    class="btn btn-danger btn-sm me-2"
                     onclick="cancelAppointment(${a.id})">
+
+                    <i class="bi bi-x-circle"></i>
+
                     Cancel
+
                 </button>
             `;
         }
 
-        table.innerHTML += `
-            <tr>
-                <td>${a.id}</td>
-                <td>${a.doctor_name}</td>
-                <td>${a.doctor_specialization}</td>
-                <td>${formatDate(a.appointment_date)}</td>
-                <td>                               
-                <span class="badge ${getStatusBadge(a.status)}">
-                    ${a.status}
-                </span>
-            
-                </td>
-                <td>${actions || "-"}</td>
-            </tr>
-        `;
-    });
+        // Approved & Completed -> Chat Button
+        if (a.status === "approved" || a.status === "completed") {
+
+            actions += `
+                <a
+                    href="/chat/?appointment=${a.id}"
+                    class="btn btn-primary btn-sm">
+
+                    <i class="bi bi-chat-dots"></i>
+
+                    Chat
+
+                </a>
+            `;
+        }
+                
+
+            table.innerHTML += `
+                <tr>
+                    <td>${a.id}</td>
+                    <td>${a.doctor_name}</td>
+                    <td>${a.doctor_specialization}</td>
+                    <td>${formatDate(a.appointment_date)}</td>
+                    <td>                               
+                    <span class="badge ${getStatusBadge(a.status)}">
+                        ${a.status}
+                    </span>
+                
+                    </td>
+                    <td>${actions || "-"}</td>
+                </tr>
+            `;
+        });
 }
 
 

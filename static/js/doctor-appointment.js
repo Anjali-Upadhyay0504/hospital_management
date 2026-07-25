@@ -141,19 +141,39 @@ function renderAppointments(appointments) {
         if (item.status === "approved" || item.status === "completed") {
 
             actions = `
-                <button class="btn btn-primary btn-sm"
+                <button
+                    class="btn btn-primary btn-sm me-2"
                     onclick="window.location.href='/doctor/prescriptions/?appointment=${item.id}'">
+
+                    <i class="bi bi-file-earmark-medical"></i>
+
                     Prescription
+
                 </button>
 
-                <button class="btn btn-info btn-sm "
+                <button
+                    class="btn btn-info btn-sm me-2"
                     onclick="viewReports(${item.id})">
+
+                    <i class="bi bi-file-medical"></i>
+
                     Medical Reports
+
                 </button>
+
+                <a
+                    href="/chat/?appointment=${item.id}"
+                    class="btn btn-success btn-sm">
+
+                    <i class="bi bi-chat-dots"></i>
+
+                    Chat
+
+                </a>
             `;
 
         }
-         
+                
 
         table.innerHTML += `
             <tr>

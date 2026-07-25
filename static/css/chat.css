@@ -1,0 +1,52 @@
+.chat-body{
+
+    height:500px;
+
+    overflow-y:auto;
+
+    background:#f8f9fa;
+
+    padding:20px;
+}
+
+.message{
+
+    max-width:70%;
+
+    padding:10px 15px;
+
+    border-radius:15px;
+
+    margin-bottom:15px;
+
+    word-wrap:break-word;
+}
+
+.patient{
+
+    background:#0d6efd;
+
+    color:white;
+
+    margin-left:auto;
+}
+
+.doctor{
+
+    background:white;
+
+    border:1px solid #ddd;
+
+    margin-right:auto;
+}
+
+.message-time{
+
+    display:block;
+
+    font-size:12px;
+
+    opacity:.7;
+
+    margin-top:5px;
+}
