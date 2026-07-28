@@ -19,6 +19,9 @@ class User(AbstractUser):
         choices=ROLE_CHOICES,
         default="patient"
     )
+    # Add these fields
+    is_online = models.BooleanField(default=False)
+    last_seen = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.username} ({self.role})"

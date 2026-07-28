@@ -6,33 +6,23 @@ let appointmentId = null;
 let currentUserId = null;
 let currentUserRole = null;
 let socket = null;
+let typingTimeout = null;
 
 
 /* ==========================================
             GET APPOINTMENT ID
 ========================================== */
 
-const params = new URLSearchParams(
-    window.location.search
-);
-
+const params = new URLSearchParams(window.location.search);
 
 appointmentId = params.get("appointment");
 
-
 if (!appointmentId) {
 
-    showToast(
-        "Invalid appointment.",
-        "error"
-    );
+    showToast("Invalid appointment.", "error");
 
-    throw new Error(
-        "Appointment ID missing."
-    );
-
+    throw new Error("Appointment ID missing.");
 }
-
 
 
 /* ==========================================
@@ -47,9 +37,7 @@ async function loadCurrentUser() {
             `${BASE_URL}/api/accounts/me/`
         );
 
-
         const data = await safeJson(res);
-
 
         if (!res.ok) {
 
@@ -59,19 +47,14 @@ async function loadCurrentUser() {
             );
 
             return;
-
         }
 
-
-        currentUserId = data.id;
-
+        currentUserId = Number(data.id);
         currentUserRole = data.role;
-
 
     }
 
-
-    catch(err){
+    catch (err) {
 
         console.error(err);
 
@@ -80,28 +63,21 @@ async function loadCurrentUser() {
 }
 
 
-
 /* ==========================================
                 LOAD OLD CHAT
 ========================================== */
 
-async function loadMessages(){
+async function loadMessages() {
 
     try {
 
-
         const res = await authFetch(
-
             `${BASE_URL}/api/chat/appointment/${appointmentId}/messages/`
-
         );
-
 
         const data = await safeJson(res);
 
-
-
-        if(!res.ok){
+        if (!res.ok) {
 
             showToast(
                 "Failed to load chat",
@@ -109,62 +85,29 @@ async function loadMessages(){
             );
 
             return;
-
         }
 
-
-
-        /*
-            API Response:
-
-            {
-                appointment:{},
-                current_user:{},
-                messages:[]
-            }
-
-        */
-
-
-        currentUserId =
-            data.current_user.id;
-
-
-        currentUserRole =
-            data.current_user.role;
-
-
-
-        // Chat header
+        currentUserId = Number(data.current_user.id);
+        currentUserRole = data.current_user.role;
 
         const name =
             currentUserRole === "patient"
-            ? data.appointment.doctor_name
-            : data.appointment.patient_name;
+                ? data.appointment.doctor_name
+                : data.appointment.patient_name;
 
+        const header = getE1("chatUserName");
 
-
-        const header =
-            getE1("chatUserName");
-
-
-        if(header){
+        if (header) {
 
             header.innerText = name;
 
         }
 
-
-
-        renderMessages(
-            data.messages
-        );
-
+        renderMessages(data.messages);
 
     }
 
-
-    catch(err){
+    catch (err) {
 
         console.error(err);
 
@@ -173,234 +116,192 @@ async function loadMessages(){
 }
 
 
-
 /* ==========================================
-            RENDER OLD MESSAGES
+            RENDER MESSAGES
 ========================================== */
 
+function renderMessages(messages) {
 
-function renderMessages(messages){
-
-
-    const container =
-        getE1("chatMessages");
-
-
+    const container = getE1("chatMessages");
 
     container.innerHTML = "";
 
-
-
-    if(messages.length === 0){
-
+    if (!messages || messages.length === 0) {
 
         container.innerHTML = `
-
             <div class="text-center text-muted mt-5">
-
                 No messages yet.
-
             </div>
-
         `;
 
-
         return;
-
     }
-
-
 
     messages.forEach(message => {
 
-
         appendMessage(message);
-
 
     });
 
-
-
 }
-
-
 
 
 /* ==========================================
             APPEND MESSAGE
 ========================================== */
 
+function appendMessage(message) {
 
-function appendMessage(message){
-
-
-    const container =
-        getE1("chatMessages");
-
-
+    const container = getE1("chatMessages");
 
     const side =
-
-        message.sender === currentUserId
-
-        ? "patient"
-
-        : "doctor";
-
-
+        Number(message.sender) === Number(currentUserId)
+            ? "patient"
+            : "doctor";
 
     container.innerHTML += `
 
-
         <div class="message ${side}">
-
 
             ${escapeHtml(message.message)}
 
-
-
             <span class="message-time">
 
-                ${formatDate(
-                    message.created_at
-                )}
+                ${formatDate(message.created_at)}
 
             </span>
 
-
-
         </div>
 
-
     `;
-
-
 
     container.scrollTop =
         container.scrollHeight;
 
-
 }
-
 
 
 /* ==========================================
             CONNECT WEBSOCKET
 ========================================== */
 
-
-function connectWebSocket(){
-
-
+function connectWebSocket() {
 
     const protocol =
-
         window.location.protocol === "https:"
+            ? "wss"
+            : "ws";
 
-        ? "wss"
+    const token =
+        localStorage.getItem("access_token");
 
-        : "ws";
+    socket = new WebSocket(
+        `${protocol}://${window.location.host}/ws/chat/${appointmentId}/?token=${token}`
+    );
 
+    socket.onopen = function () {
 
-
-        const token = localStorage.getItem("access_token");
-
-        socket = new WebSocket(
-            `${protocol}://${window.location.host}/ws/chat/${appointmentId}/?token=${token}`
-        );
-
-
-
-
-    socket.onopen = function(){
-
-
-        console.log(
-            "WebSocket Connected"
-        );
-
+        console.log("✅ WebSocket Connected");
 
     };
 
 
-
-
-
-    socket.onmessage = function(event){
-
+    socket.onmessage = function (event) {
 
         const data =
-            JSON.parse(
-                event.data
-            );
+            JSON.parse(event.data);
 
+        console.log("Socket Event:", data);
 
+        switch (data.type) {
 
-        console.log(
-            "New Message",
-            data
-        );
+            case "chat_message":
 
+                appendMessage(data);
 
+                break;
 
-        appendMessage(data);
+            case "status":
 
+                if (Number(data.user_id) === Number(currentUserId)) {
+                    break;
+                }
 
+                const status = getE1("chatStatus");
+
+                if (status) {
+                    status.innerHTML =
+                        data.status === "online"
+                            ? "🟢 Online"
+                            : "🔴 Offline";
+                }
+
+    
+
+                break;
+
+            case "typing":
+
+                const typing =
+                    getE1("typingIndicator");
+
+                if (!typing)
+                    return;
+
+                if (data.typing) {
+
+                    typing.innerHTML =
+                        `${data.username} is typing...`;
+
+                }
+
+                else {
+
+                    typing.innerHTML = "";
+
+                }
+
+                break;
+
+            default:
+
+                console.log(data);
+
+        }
 
     };
 
 
+    socket.onclose = function () {
 
-
-
-    socket.onclose = function(){
-
-
-        console.log(
-            "WebSocket Closed"
-        );
-
+        console.log("❌ WebSocket Closed");
 
     };
 
 
-
-
-
-    socket.onerror = function(error){
-
+    socket.onerror = function (error) {
 
         console.error(
             "WebSocket Error",
             error
         );
 
-
     };
 
 }
-
-
-
 /* ==========================================
-            SEND MESSAGE
+                SEND MESSAGE
 ========================================== */
 
+function sendMessage() {
 
-function sendMessage(){
+    const input = getE1("messageInput");
 
+    if (!input) return;
 
-    const input =
-        getE1("messageInput");
+    const message = input.value.trim();
 
-
-
-    const message =
-        input.value.trim();
-
-
-
-    if(!message){
+    if (!message) {
 
         showToast(
             "Message cannot be empty",
@@ -408,17 +309,9 @@ function sendMessage(){
         );
 
         return;
-
     }
 
-
-
-
-
-    if(
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
-    ){
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
 
         showToast(
             "Chat not connected",
@@ -426,101 +319,181 @@ function sendMessage(){
         );
 
         return;
-
     }
 
+    socket.send(JSON.stringify({
 
+        type: "chat_message",
 
+        message: message
 
-
-    socket.send(
-
-        JSON.stringify({
-
-            message: message
-
-        })
-
-    );
-
-
+    }));
 
     input.value = "";
 
+    const typing = getE1("typingIndicator");
 
+    if (typing) {
+
+        typing.innerHTML = "";
+
+    }
 
 }
 
 
+/* ==========================================
+            MESSAGE INPUT EVENTS
+========================================== */
+
+function setupInputEvents() {
+
+    const input = getE1("messageInput");
+
+    if (!input) return;
+
+    // Enter to Send
+    input.addEventListener("keypress", function (e) {
+
+        if (e.key === "Enter") {
+
+            e.preventDefault();
+
+            sendMessage();
+
+        }
+
+    });
+
+    // Typing Indicator
+    input.addEventListener("input", function () {
+
+        if (
+            !socket ||
+            socket.readyState !== WebSocket.OPEN
+        ) {
+
+            return;
+
+        }
+
+        socket.send(JSON.stringify({
+
+            type: "typing",
+
+            typing: true
+
+        }));
+
+        clearTimeout(typingTimeout);
+
+        typingTimeout = setTimeout(function () {
+
+            if (
+                socket &&
+                socket.readyState === WebSocket.OPEN
+            ) {
+
+                socket.send(JSON.stringify({
+
+                    type: "typing",
+
+                    typing: false
+
+                }));
+
+            }
+
+        }, 1000);
+
+    });
+
+}
+
+
+/* ==========================================
+            AUTO RECONNECT
+========================================== */
+
+function reconnectSocket() {
+
+    setTimeout(function () {
+
+        console.log("Reconnecting...");
+
+        connectWebSocket();
+
+    }, 3000);
+
+}
 
 
 /* ==========================================
                 INIT
 ========================================== */
 
-
 document.addEventListener(
-"DOMContentLoaded",
-async ()=>{
 
+    "DOMContentLoaded",
 
-    await protectPage();
+    async function () {
 
+        await protectPage();
 
+        await loadCurrentUser();
 
-    await loadCurrentUser();
+        await loadMessages();
 
+        connectWebSocket();
 
+        setupInputEvents();
 
-    await loadMessages();
+        const sendBtn = getE1("sendBtn");
 
+        if (sendBtn) {
 
+            sendBtn.addEventListener(
 
-    connectWebSocket();
+                "click",
 
+                sendMessage
 
+            );
 
-    const sendBtn =
-        getE1("sendBtn");
-
-
-
-    if(sendBtn){
-
-        sendBtn.addEventListener(
-            "click",
-            sendMessage
-        );
+        }
 
     }
 
+);
 
 
-    const input =
-        getE1("messageInput");
+/* ==========================================
+        RECONNECT WHEN DISCONNECTED
+========================================== */
 
+window.addEventListener("offline", function () {
 
-
-    if(input){
-
-        input.addEventListener(
-            "keypress",
-            function(e){
-
-                if(e.key === "Enter"){
-
-                    sendMessage();
-
-                }
-
-            }
-        );
-
-    }
-
+    console.log("Internet Lost");
 
 });
 
+window.addEventListener("online", function () {
+
+    console.log("Internet Restored");
+
+    if (
+
+        !socket ||
+
+        socket.readyState === WebSocket.CLOSED
+
+    ) {
+
+        reconnectSocket();
+
+    }
+
+});
 
 
 /* ==========================================
